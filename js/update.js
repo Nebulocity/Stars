@@ -13,16 +13,18 @@ function gameUpdate() {
 	const TEMP_MULTIPLIER = 1500000; 
 	const PRESSURE_FACTOR = 0.2;
 	const GRAVITY_FACTOR = 274;
-	var fusionRate = starState.mass * 0.00001; // scaled burn rate
-	var pressureGravityRatio = starState.pressure / starState.gravity;
+	const EXPANSION_FACTOR = Phaser.Math.Clamp(starState.pressure / starState.gravity, 0.5, 5);
 	
+	var fusionRate = Math.min(0.005 * starState.mass, starState.fusionFuel); 
+	starState.fusionFuel -= fusionRate;
+		
+	var pressureGravityRatio = starState.pressure / starState.gravity;
+		
     // Space background effect
     this.space_layer1.tilePositionX += .05;
     this.space_layer2.tilePositionX += .15;
     this.space_layer3.tilePositionX += .25;
 
-    // Passive changes based on mass
-	var rnd = new Phaser.Math.RandomDataGenerator();
 	
 	// Update star stats
 	// Fuel burn over time
@@ -33,7 +35,7 @@ function gameUpdate() {
 	starState.gravity = starState.mass * GRAVITY_FACTOR;	
 	
 	// Temp increase from fusion
-	starState.temperature += fusionRate * 15000000000;		
+	starState.temperature += fusionRate;// * 15000000000;		
 	
 	// Pressure increase from temp, fights collapse
 	starState.pressure = starState.gravity * (starState.temperature * PRESSURE_FACTOR);	
@@ -42,12 +44,20 @@ function gameUpdate() {
 	starState.lifetime += this.game.loop.delta / 1000;
 	
 	// Expansion (radius) from pressure vs gravity
-	starState.radius = 10 + pressureGravityRatio * 0.5;
+	starState.radius = 10 + EXPANSION_FACTOR * 5;
+	
+	// Calculate the area of the star based on the radius
+	starState.starArea = 4 * Math.PI * Math.pow(starState.radius, 2);
+	
+	// Now calculate Force
+	var force = starState.pressure * starState.starArea;
+		
+	console.log("Fuel: ", starState.fusionFuel);
 	
 	// Phase change based on mass and temperature
 	// Can also shift when mass drops or core temp spikes
 	if (starState.mass < 0.1) { 
-		starState.phase = 'Brown Dwarft';
+		starState.phase = 'Brown Dwarf';
 	}
 	else if (starState.mass < 1.5) {
 		starState.phase = 'Protostar';
@@ -62,13 +72,7 @@ function gameUpdate() {
 		starState.phase = 'Unstable';
 	}
 	
-	// If temp drops too low or mass becomes negligible
-	if (starState.mass <= 0 || starState.temperature < 100000) {
-		console.log("Burned out...you've become a brown dwarft!");
-		this.scene.pause();
-	}
-	
-	
+		
 	// Phase-based radius multiplier and base color
 	let radius = 10;
 	let fontSize = '18px';
@@ -126,16 +130,35 @@ function gameUpdate() {
 	  `Core Temp: ${Math.round(starState.temperature).toLocaleString()} K\n` +
 	  `Gravity: ${Math.round(starState.gravity)} m/s²\n` +
 	  `Pressure: ${Math.round(starState.pressure).toLocaleString()} Pa\n` + 
+	  `Fuel: ${Math.round(starState.fusionFuel.toFixed(2))} Tns\n` + 
 	  `Lifetime: ${this.starState.lifetime.toFixed(1)} Yrs\n` + 
 	  `Radius: ${this.starState.radius.toFixed(2)}`
 	);
 
 	this.statusText.setStyle({ fill: hexString, fontSize, fontStyle: 'bold' });
 	
-	// Check for star death
-	if (starState.temperature > 100000000000) {
-		console.log('Supernova!');
-		this.scene.pause();
+	
+	// ***** End Conditions *****
+	
+	// Dissipation
+	if (starState.mass <= 0.00) {
+		// console.log("Your star has dissipated into nothingness! [0 Solar Masses]");
+		// this.scene.pause();
+	}
+	
+	// Brown Dwarf
+	if (starState.fusionFuel <= 0 || starState.temperature < 500000) {
+		// console.log("Your star has become a brown dwarft! [0 fuel and low temp]");
+		// this.scene.pause();
+	}
+	
+	// Supernova
+	// Convert Pascals of pressure to Newtons of Force based on the Area of the star
+	
+	if (force > starState.gravity)
+	{
+		// console.log("Your star has become a supernova! [Gravity couldn't contain the pressure]");
+		// this.scene.pause();
 	}
 }
 
