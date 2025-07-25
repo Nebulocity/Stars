@@ -49,10 +49,12 @@ function gameCreate() {
 	// Realistic protostar starting point
 	this.starState = {
 		mass: Phaser.Math.FloatBetween(0.1, 1), 					// Solar masses
-		temperature: Phaser.Math.FloatBetween(500000, 1000000),		// Kelvin			
+		temperature: Phaser.Math.FloatBetween(500000, 1000000),		// Kelvin	
+		fusionFuel: Phaser.Math.FloatBetween(1.0, 2.0),
 		gravity: 0,			// Will be calculated
 		pressure: 0,		// Will be calculated
 		radius: 10,			// To start
+		starArea: 10,			// Will be calculated
 		phase: 'Protostar',
 		lifetime: Phaser.Math.FloatBetween(3000, 7500)
 	};
@@ -79,8 +81,8 @@ function gameCreate() {
 	AddMaterialButton.setInteractive({ useHandCursor: true });
 	AddMaterialButton.on('pointerdown', () => { 
 		var added = Phaser.Math.FloatBetween(0.1, 0.8);
-		this.starState.mass += added;
-		console.log(`+${added.toFixed(2)} solar masses`);
+		this.starState.fusionFuel += added;
+		console.log(`+${added.toFixed(2)} fusion fuel`);
 	});
 	
 	var AddMaterialText = this.add.text(AddMaterialButton.x - 60, AddMaterialButton.y - 10, '+ Material', {
@@ -95,8 +97,8 @@ function gameCreate() {
 	SubMaterialButton.setInteractive({ useHandCursor: true });
 	SubMaterialButton.on('pointerdown', () => {
 		var removed = Phaser.Math.FloatBetween(0.1, 0.8);
-		this.starState.mass = Math.max(0.01, this.starState.mass - removed);
-		console.log(`+${removed.toFixed(2)} solar masses`);
+		this.starState.fusionFuel = Math.max(0.01, this.starState.fusionFuel - removed);
+		console.log(`+${removed.toFixed(2)} fusion fuel`);
 		
 	});
 	
