@@ -28,19 +28,38 @@ function gameCreate() {
 	// Add status text
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
 
-	// Star state for evolving stars
+
+	/* 
+		Star facts that I found on Google:
+		
+		The average protostar can have a mass between 10 and 50 solar masses, and a core temp 
+		of up to 1 million Kelvin.
+		
+		The average main sequence star has a mass between 1 and 100 solar masses, and a core temp
+		of around 15 million Kelvin.
+		
+		The average red giant star has a mass between .3 to 8 times it's average mass, and a core temp 
+		of around 100 million Kelvin.
+
+		The average unstable star, particularly one that undergoes a pair-instability supernova, is usually 
+		between 130 and 250 solar masses.  The average core temp can be between 6,000 Kelvin to 40,000 Kelvin.
+		
+	*/		
+
+	// Realistic protostar starting point
 	this.starState = {
-		mass:.08,
-		temperature: 1000000,
-		gravity: 1,
-		pressure: 1,
-		radius: 10,
+		mass: Phaser.Math.FloatBetween(0.1, 1), 					// Solar masses
+		temperature: Phaser.Math.FloatBetween(500000, 1000000),		// Kelvin			
+		gravity: 0,			// Will be calculated
+		pressure: 0,		// Will be calculated
+		radius: 10,			// To start
 		phase: 'Protostar',
-		lifetime: 0
+		lifetime: Phaser.Math.FloatBetween(3000, 7500)
 	};
 
 	// Create the star
 	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xFFFF00); // 0xFF0000 is red
+	this.star.setFillStyle(0xffff00, 1);
 
 	// Create the pulsing tween
 	this.tweens.add({
@@ -59,8 +78,9 @@ function gameCreate() {
 	AddMaterialButton.setScale(.1);
 	AddMaterialButton.setInteractive({ useHandCursor: true });
 	AddMaterialButton.on('pointerdown', () => { 
-		console.log("adding material!");
-		this.starState.mass += 1 
+		var added = Phaser.Math.FloatBetween(0.1, 0.8);
+		this.starState.mass += added;
+		console.log(`+${added.toFixed(2)} solar masses`);
 	});
 	
 	var AddMaterialText = this.add.text(AddMaterialButton.x - 60, AddMaterialButton.y - 10, '+ Material', {
@@ -74,8 +94,10 @@ function gameCreate() {
 	SubMaterialButton.setScale(.1);
 	SubMaterialButton.setInteractive({ useHandCursor: true });
 	SubMaterialButton.on('pointerdown', () => {
-		console.log("subtracting material!");
-		this.starState.mass = Math.max(1, this.starState.mass - 1); 
+		var removed = Phaser.Math.FloatBetween(0.1, 0.8);
+		this.starState.mass = Math.max(0.01, this.starState.mass - removed);
+		console.log(`+${removed.toFixed(2)} solar masses`);
+		
 	});
 	
 	var SubMaterialText = this.add.text(SubMaterialButton.x - 60, SubMaterialButton.y - 10, '- Material', {
