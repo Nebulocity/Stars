@@ -16,6 +16,14 @@ function gameCreate() {
 	// Status text
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
 
+	// Warning text
+	this.warningText = this.add.text(centerX, centerY/2, '', {
+		fontSize: '24px',
+		color: '#ff0000', 
+		fontStyle: 'bold',
+		padding: {x:10, y:6 }
+	}).setOrigin(0.5).setAlpha(0);
+			
 	// Game over text
 	this.gameOverText = this.add.text(centerX, centerY, '', {
 		fontSize: '24px',
@@ -30,7 +38,7 @@ function gameCreate() {
 	const MAX_VAL = 1000;
 
 	// Generate some starting stats for the stellar gas
-	var mass = generateRandomSolarMass();
+	var mass = generateRandomStellarMass();
 	var temperature = parseFloat(generateStellarTemperature());
 	var fusionStats = calculateStellarFuel(mass, temperature);
 	var fuelMass = parseFloat(fusionStats.fuelMass);
@@ -40,6 +48,8 @@ function gameCreate() {
 	// Star initial state
 	this.starState = {
 		mass: mass,
+		volume: 0,
+		density: 0,
 		temperature: temperature,
 		fuelMass: 0,
 		fuelEnergy: 0,
@@ -68,36 +78,59 @@ function gameCreate() {
 		duration: 1500
 	});
 
-	// BUTTONS 
-	// These will change as I go along but for now I just want to add/remove hydrogen for the fusion process
 
+
+	// *****************
+	// **** BUTTONS ****
+	// *****************
 	
-	// Add hydrogen button
-	const addBtn = this.add.image(centerX + 300, centerY + 125, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	addBtn.on('pointerdown', () => {
-		const added = Phaser.Math.FloatBetween(0.1, 9.99);
-		this.starState.mass += added;
+		const amountToAdd = Phaser.Math.FloatBetween(0.1, 9.99);
+		
+		this.tweens.add({
+			targets: this.starState,
+			mass: this.starState.mass + amountToAdd,
+			duration: 2000,
+			ease: 'Linear'
+		})
 	});
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
 	// Subtract hydrogen button
-	const subBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	subBtn.on('pointerdown', () => {
-		const removed = Phaser.Math.FloatBetween(0.1, 9.99);
-		this.starState.mass = this.starState.mass - removed;
+		const amountToRemove = Phaser.Math.FloatBetween(0.1, 9.99);
+		
+		if ((this.starState.mass - amountToRemove) <= 0) {
+			
+			showWarning(this, "Cannot remove mass, you have too little!");
+			
+			console.log("Cannot remove mass, you have too little!");
+		}
+		else {
+			this.tweens.add({
+				targets: this.starState,
+				mass: this.starState.mass - amountToRemove,
+				duration: 2000,
+				ease: 'Linear'
+			})
+		}
 	});
+	
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
+
 }
 
 
 // Functions used to generate stellar stats
-function generateRandomSolarMass() {
+function generateRandomStellarMass() {
     return Math.random() * 100;
 }
 
 function generateStellarTemperature() {
-    // Generate a random temperature between 10,000 K and 3,000,000 K
-    let temperature = Math.random() * (3000000 - 10000) + 10000;
+    // Generate a random temperature between 1,000 K and 1,000,000 K
+    let temperature = Math.random() * (500000 - 1000) + 10000;
     return temperature.toFixed(2);
 }
 
@@ -125,6 +158,21 @@ function calculateStellarFuel(mass, temperature) {
         fusionStatus: fusionStatus,
     };
 }
+
+function showWarning(scene, message) {
+	scene.tweens.killTweensOf(scene.warningText);
+	
+	scene.warningText.setText(message);
+	
+	scene.warningText.setAlpha(1);
+	
+	scene.tweens.add({
+		targets: scene.warningText,
+		alpha: 0,
+		duration: 3000,
+		ease: 'Sine.easeOut'
+	});
+};
 
 
 export default gameCreate;
