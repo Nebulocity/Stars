@@ -1,3 +1,5 @@
+// import { createGasEmitter } from './gasvisuals.js';
+
 function gameCreate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
@@ -58,14 +60,34 @@ function gameCreate() {
 		gravitationalForce: 0,
 		pressure: 0,
 		balance: 'Stable',
-		radius: 0,
+		radius: 10,
 		starArea: 0,
 		phase: 'Solar gas',
 		lifetime: 0
 	};
 
+
+
 	// Create star
 	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xffff00).setDepth(10);
+	this.star.visible = false;
+	
+	this.cloud = this.physics.add.sprite(centerX, centerY, 'cloud').setScale(.15);
+	
+	// const emitter = this.add.particles(0, 0, 'purple', {
+		// speed: 24,
+		// lifespan: 1500,
+		// quantity: 10,
+		// scale: { start: 0.4, end: 0 },
+		// emitting: false,
+		// emitZone: { type: 'edge', source: this.star.getBounds(), quantity: 32 },
+		// duration: 0
+	// });
+
+	// emitter.start(2000);
+
+
+	
 
 	// Pulse animation
 	this.tweens.add({
