@@ -25,9 +25,11 @@ function gameCreate() {
 		wordWrap: { width: 400 }
 	}).setOrigin(0.5).setVisible(false).setDepth(11);
 
+	// Used to max out or clamp values so they're not indecipherable
 	const MIN_VAL = 1;
 	const MAX_VAL = 1000;
-	
+
+	// Generate some starting stats for the stellar gas
 	var mass = generateRandomSolarMass();
 	var temperature = parseFloat(generateStellarTemperature());
 	var fusionStats = calculateStellarFuel(mass, temperature);
@@ -66,7 +68,11 @@ function gameCreate() {
 		duration: 1500
 	});
 
-	// Add material button
+	// BUTTONS 
+	// These will change as I go along but for now I just want to add/remove hydrogen for the fusion process
+
+	
+	// Add hydrogen button
 	const addBtn = this.add.image(centerX + 300, centerY + 125, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	addBtn.on('pointerdown', () => {
 		const added = Phaser.Math.FloatBetween(0.1, 0.8);
@@ -75,7 +81,7 @@ function gameCreate() {
 	});
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Material', { fontSize: '18px', fill: '#ffffff' });
 
-	// Subtract material button
+	// Subtract hydrogen button
 	const subBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	subBtn.on('pointerdown', () => {
 		const removed = Phaser.Math.FloatBetween(0.1, 0.8);
@@ -85,6 +91,8 @@ function gameCreate() {
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Material', { fontSize: '18px', fill: '#ffffff' });
 }
 
+
+// Functions used to generate stellar stats
 function generateRandomSolarMass() {
     return Math.random() * 100;
 }
@@ -109,7 +117,7 @@ function calculateStellarFuel(mass, temperature) {
     // Energy released (in joules)
     const totalEnergy = fuelKg * fusionEnergyPerKg;
 
-    // If temperature is below threshold for fusion (1-3 million K), we assume fusion is not yet happening
+    // If temperature is below threshold for fusion (1-3 million K), assume fusion is not yet happening
     const fusionThresholdTemp = 10000000; // 10 million Kelvin for hydrogen fusion to start
     const fusionStatus = temperature >= fusionThresholdTemp ? "Fusion is happening" : "Fusion not yet happening";
 
