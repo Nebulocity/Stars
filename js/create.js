@@ -41,8 +41,8 @@ function gameCreate() {
 	this.starState = {
 		mass: mass,
 		temperature: temperature,
-		fuelMass: fuelMass,
-		fuelEnergy: totalEnergy,
+		fuelMass: 0,
+		fuelEnergy: 0,
 		fusionStatus: fusionStatus,
 		gravity: 0,
 		gravitationalForce: 0,
@@ -75,20 +75,18 @@ function gameCreate() {
 	// Add hydrogen button
 	const addBtn = this.add.image(centerX + 300, centerY + 125, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	addBtn.on('pointerdown', () => {
-		const added = Phaser.Math.FloatBetween(0.1, 0.8);
-		this.starState.fusionFuel += added;
-		console.log(`+${added.toFixed(2)} fusion fuel`);
+		const added = Phaser.Math.FloatBetween(0.1, 9.99);
+		this.starState.mass += added;
 	});
-	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Material', { fontSize: '18px', fill: '#ffffff' });
+	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
 	// Subtract hydrogen button
 	const subBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	subBtn.on('pointerdown', () => {
-		const removed = Phaser.Math.FloatBetween(0.1, 0.8);
-		this.starState.fusionFuel = Math.max(0.01, this.starState.fusionFuel - removed);
-		console.log(`-${removed.toFixed(2)} fusion fuel`);
+		const removed = Phaser.Math.FloatBetween(0.1, 9.99);
+		this.starState.mass = this.starState.mass - removed;
 	});
-	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Material', { fontSize: '18px', fill: '#ffffff' });
+	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 }
 
 
