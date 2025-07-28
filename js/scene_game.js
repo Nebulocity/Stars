@@ -1,6 +1,6 @@
-import gamePreload from '/js/preload.js';
-import gameCreate from '/js/create.js';
-import gameUpdate from '/js/update.js';
+import gamePreload from '/stars/js/preload.js';
+import gameCreate from '/stars/js/create.js';
+import gameUpdate from '/stars/js/update.js';
 
 class GameScene extends Phaser.Scene {
 
