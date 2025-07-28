@@ -9,11 +9,21 @@
 		Average unstable star, going supernova, is usually between 130-250 solar masses and a core temp between 6,000-40,000 Kelvin.
 	*/
 
-// gravitational constant in m^3/kg/s^2
+
+
+// *******************
+// **** CONSTANTS ****
+// *******************
+
+const GRAVITY_PRESSURE_THRESHOLD = 1000;
 const GRAVITATIONAL_CONSTANT = 6.674e2;  
-	
-// Adjust the main game update logic
+const PRESSURE_CONSTANT = 1e4;
+const MAX_RADIUS = 300;
+const MIN_RADIUS = 1;
+
+
 function gameUpdate() {
+	
     const star = this.starState;
 
 	// Background parallax effect
@@ -21,22 +31,25 @@ function gameUpdate() {
     this.space_layer2.tilePositionX += 0.15;
     this.space_layer3.tilePositionX += 0.25;
 
-	const MAX_RADIUS = 300;  // 1 million meters (can adjust as needed)
-	const MIN_RADIUS = 1;  // 1 kilometer (can adjust as needed)
-	
+
 	
 	// *********************
 	// **** GAME UPDATE ****
 	// *********************
-	console.log("DEBUG: mass: ", star.mass, "temperature: ", star.temperature, "radius: ", star.radius, "gravity: ", star.gravity);	
+	
+	console.log("DEBUG: mass: ", star.mass, "temperature: ", star.temperature, "radius: ", star.radius, "gravity: ", star.gravity, "density: ", star.density);	
 	
 	star.radius = calculateStellarRadius(star.mass);
+	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
+	star.density = (star.mass.toFixed(4) / star.volume.toFixed(4));
+	
 	star.gravity = calculateStellarGravity(GRAVITATIONAL_CONSTANT, star.mass, star.radius);
 	star.gravitationalForce = parseFloat(calculateGravitationalForce(star.mass, star.radius));
-	star.pressure = parseFloat(calculatePressure(star.temperature));
+	star.pressure = (star.temperature / Math.max(1, star.gravity)) * PRESSURE_CONSTANT;
 	star.balance = calculateStellarBalance(star.pressure, star.gravitationalForce);
     star.lifetime += this.game.loop.delta / 1000;  // Increment star lifetime
 
+	
 	
 	// ****************
 	// **** FUSION ****
@@ -83,15 +96,34 @@ function gameUpdate() {
 		star.fuelMass = 0;
 		star.totalEnergy = 0;
 	}
-	
 
-	// Update the display with current star status
+	
+	
+	// *******************************
+	// **** EXPANSION/CONTRACTION ****
+	// *******************************
+	
+	if (star.pressure > star.gravity * GRAVITY_PRESSURE_THRESHOLD) {
+		star.balance = "Expanding";
+	}
+	else {
+		star.balance = "Contracting";
+	}
+	
+	
+	
+	// ***********************
+	// **** DISPLAY STATS ****
+	// ***********************
+	
 	this.statusText.setText(
 		`*** Stellar Profile ***\n` +
 		`Phase: ${star.phase}\n` +
 		`Balance: ${star.balance}\n\n` +
 		
-		`Mass: ${star.mass.toFixed(2)}\n` +  // Scientific notation for mass
+		`Mass: ${star.mass.toFixed(2)}\n` +
+		`Density: ${star.density.toFixed(2)}\n` +
+		`Volume: ${star.volume.toFixed(2)}\n` +
 		`Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
 		
 		`Gravity: ${star.gravity.toFixed(2)} m/s²\n` +
@@ -108,6 +140,11 @@ function gameUpdate() {
 
 }
 
+
+
+// ************************
+// **** GAME FUNCTIONS ****
+// ************************
 
 function calculateStellarRadius(mass) {
     const radius = Math.pow(mass, 0.8);  // radius in meters
@@ -170,6 +207,21 @@ function calculateFusionRate(mass, temperature) {
 
     return fusionRate;
 }
+
+function showWarning(scene, message) {
+		scene.tweens.killTweensOf(scene.warningText);
+		
+		scene.warningText.setText(message);
+		
+		scene.warningText.setAlpha(1);
+		
+		scene.tweens.add({
+			targets: scene.warningText,
+			alpha: 0,
+			duration: 3000,
+			ease: 'Sine.easeOut'
+		});
+	};
 
 function showGameOver(message) {
 	this.gameOverText.setText(message);
