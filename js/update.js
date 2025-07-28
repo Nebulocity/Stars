@@ -197,19 +197,19 @@ function gameUpdate() {
 	if (star.fusionFuel <= 0 && star.temperature <= BROWN_DWARF_TEMP) {
 		console.log("fuel: ", star.fusionFuel, " & temp: ", star.temperature);
 		star.phase = 'Brown Dwarf';
-		showGameOver.call(this, "☠️ Stellar Death:\n\nYour star has become a brown dwarf!\n\n[No fuel and low temp]");
+		showGameOver.call(this, "Stellar Death:\n\nYour star has become a brown dwarf!\n\n[No fuel and low temp]");
 	} else if (star.fusionFuel <= 0) {
 		star.phase = 'Brown Dwarf';  // For low fuel but higher temperature stars
-		showGameOver.call(this, "☠️ Stellar Death:\n\nYour star has become a brown dwarf!\n\n[No fuel remaining]");
+		showGameOver.call(this, "Stellar Death:\n\nYour star has become a brown dwarf!\n\n[No fuel remaining]");
 	} else if (star.temperature < MIN_TEMP) {
 		// Prevent game over if the temperature falls just below the limit but still has some fuel left
-		showGameOver.call(this, "☠️ Stellar Death:\n\nYour star's temperature is too low to maintain fusion!\n\n[Low temperature]");
+		showGameOver.call(this, "Stellar Death:\n\nYour star's temperature is too low to maintain fusion!\n\n[Low temperature]");
 	} else if (star.lifetime > 50000 && force > star.gravity) {
-		showGameOver.call(this, "☠️ Stellar Death:\n\nYour star has gone supernova!\n\n[Gravity couldn't contain the pressure]");
+		showGameOver.call(this, "Stellar Death:\n\nYour star has gone supernova!\n\n[Gravity couldn't contain the pressure]");
 	} else if (star.mass < 0.1 && star.fusionFuel <= 0) {
-		showGameOver.call(this, "☠️ Stellar Death:\n\nBrown Dwarf - fizzled out!\n\n[Mass/Fuel at 0]");
+		showGameOver.call(this, "Stellar Death:\n\nBrown Dwarf - fizzled out!\n\n[Mass/Fuel at 0]");
 	} else if (star.mass > 40 && star.fusionFuel <= 0) {
-		showGameOver.call(this, "☠️ Stellar Death:\n\nSupernova - you're a black hole now!\n\n[mass high, no fuel]");
+		showGameOver.call(this, "Stellar Death:\n\nSupernova - you're a black hole now!\n\n[mass high, no fuel]");
 	}
 
     function showGameOver(message) {
