@@ -1,112 +1,124 @@
 function gameCreate() {
+	const centerX = this.sys.game.config.width / 2;
+	const centerY = this.sys.game.config.height / 2;
 
-	var events, star;
-	const starState = this.starState;
+	// Set world bounds
+	this.physics.world.setBounds(0, 0, 800, 252);
 
-	var centerX = this.sys.game.config.width / 2;
-	var centerY = this.sys.game.config.height / 2;
-	
-    // Set world bounds
-    this.physics.world.setBounds(0, 0, 800, 252);
+	// Create space background layers
+	for (let i = 1; i <= 3; i++) {
+		const layer = this.make.graphics({ x: 0, y: 0, add: false });
+		layer.generateTexture(`space_layer${i}`, 0, 0);
+		this[`space_layer${i}`] = this.add.tileSprite(0, 0, 2400, 900, `space_layer${i}`).setScale(1);
+		this[`space_layer${i}`].depth = -99 + i;
+	}
 
-    // Create space background
-    const space_layer1 = this.make.graphics({ x: 0, y: 0, add: false });
-    space_layer1.generateTexture('space_layer1', 0, 0);
-    this.space_layer1 = this.add.tileSprite(0, 0, 2400, 900, 'space_layer1').setScale(1);
-    this.space_layer1.depth = -99;
-
-    const space_layer2 = this.make.graphics({ x: 0, y: 0, add: false });
-    space_layer2.generateTexture('space_layer2', 0, 0);
-    this.space_layer2 = this.add.tileSprite(0, 0, 2400, 900, 'space_layer2').setScale(1);
-    this.space_layer1.depth = -98;
-
-    const space_layer3 = this.make.graphics({ x: 0, y: 0, add: false });
-    space_layer3.generateTexture('space_layer3', 0, 0);
-    this.space_layer3 = this.add.tileSprite(0, 0, 2400, 900, 'space_layer3').setScale(1);
-    this.space_layer1.depth = -97;
-
-	// Add status text
+	// Status text
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
 
+	// Game over text
+	this.gameOverText = this.add.text(centerX, centerY, '', {
+		fontSize: '24px',
+		fontStyle: 'bold',
+		fill: '#ff6666',
+		align: 'center',
+		wordWrap: { width: 400 }
+	}).setOrigin(0.5).setVisible(false).setDepth(11);
 
-	/* 
-		Star facts that I found on Google:
-		
-		The average protostar can have a mass between 10 and 50 solar masses, and a core temp 
-		of up to 1 million Kelvin.
-		
-		The average main sequence star has a mass between 1 and 100 solar masses, and a core temp
-		of around 15 million Kelvin.
-		
-		The average red giant star has a mass between .3 to 8 times it's average mass, and a core temp 
-		of around 100 million Kelvin.
-
-		The average unstable star, particularly one that undergoes a pair-instability supernova, is usually 
-		between 130 and 250 solar masses.  The average core temp can be between 6,000 Kelvin to 40,000 Kelvin.
-		
-	*/		
-
-	// Realistic protostar starting point
+	const MIN_VAL = 1;
+	const MAX_VAL = 1000;
+	
+	var mass = generateRandomSolarMass();
+	var temperature = parseFloat(generateStellarTemperature());
+	var fusionStats = calculateStellarFuel(mass, temperature);
+	var fuelMass = parseFloat(fusionStats.fuelMass);
+	var totalEnergy = parseFloat(fusionStats.totalEnergy);
+	var fusionStatus = fusionStats.fusionStatus;
+	
+	// Star initial state
 	this.starState = {
-		mass: Phaser.Math.FloatBetween(0.1, 1), 					// Solar masses
-		temperature: Phaser.Math.FloatBetween(500000, 1000000),		// Kelvin	
-		fusionFuel: Phaser.Math.FloatBetween(1.0, 2.0),
-		gravity: 0,			// Will be calculated
-		pressure: 0,		// Will be calculated
-		radius: 10,			// To start
-		starArea: 10,			// Will be calculated
-		phase: 'Protostar',
-		lifetime: Phaser.Math.FloatBetween(3000, 7500)
+		mass: mass,
+		temperature: temperature,
+		fuelMass: fuelMass,
+		fuelEnergy: totalEnergy,
+		fusionStatus: fusionStatus,
+		gravity: 0,
+		gravitationalForce: 0,
+		pressure: 0,
+		balance: 'Stable',
+		radius: 0,
+		starArea: 0,
+		phase: 'Solar gas',
+		lifetime: 0
 	};
 
-	// Create the star
-	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xFFFF00); // 0xFF0000 is red
-	this.star.setFillStyle(0xffff00, 1);
+	// Create star
+	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xffff00).setDepth(10);
 
-	// Create the pulsing tween
+	// Pulse animation
 	this.tweens.add({
 		targets: this.star,
-		scaleX: 0.95, // Shrink to 80% of original width
-		scaleY: 0.95, // Shrink to 80% of original height
-		yoyo: true, // Go back to original size after shrinking
-		repeat: -1, // Repeat indefinitely
-		ease: 'Sine.easeInOut', // Smooth easing for the tween
-		duration: 1500 // Tween duration (milliseconds)
+		scaleX: 0.95,
+		scaleY: 0.95,
+		yoyo: true,
+		repeat: -1,
+		ease: 'Sine.easeInOut',
+		duration: 1500
 	});
-	
-	
+
 	// Add material button
-	const AddMaterialButton = this.add.image(centerX + 300, centerY + 125, 'gasButton');
-	AddMaterialButton.setScale(.1);
-	AddMaterialButton.setInteractive({ useHandCursor: true });
-	AddMaterialButton.on('pointerdown', () => { 
-		var added = Phaser.Math.FloatBetween(0.1, 0.8);
+	const addBtn = this.add.image(centerX + 300, centerY + 125, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	addBtn.on('pointerdown', () => {
+		const added = Phaser.Math.FloatBetween(0.1, 0.8);
 		this.starState.fusionFuel += added;
 		console.log(`+${added.toFixed(2)} fusion fuel`);
 	});
-	
-	var AddMaterialText = this.add.text(AddMaterialButton.x - 60, AddMaterialButton.y - 10, '+ Material', {
-		fontSize: '18px',
-		fille: '#ffffff'
-	});
+	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Material', { fontSize: '18px', fill: '#ffffff' });
 
-	
-	// Sub Material button
-	const SubMaterialButton = this.add.image(centerX + 300, centerY + 175, 'gasButton');
-	SubMaterialButton.setScale(.1);
-	SubMaterialButton.setInteractive({ useHandCursor: true });
-	SubMaterialButton.on('pointerdown', () => {
-		var removed = Phaser.Math.FloatBetween(0.1, 0.8);
+	// Subtract material button
+	const subBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	subBtn.on('pointerdown', () => {
+		const removed = Phaser.Math.FloatBetween(0.1, 0.8);
 		this.starState.fusionFuel = Math.max(0.01, this.starState.fusionFuel - removed);
-		console.log(`+${removed.toFixed(2)} fusion fuel`);
-		
+		console.log(`-${removed.toFixed(2)} fusion fuel`);
 	});
-	
-	var SubMaterialText = this.add.text(SubMaterialButton.x - 60, SubMaterialButton.y - 10, '- Material', {
-		fontSize: '18px',
-		fille: '#ffffff'
-	});
-	
+	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Material', { fontSize: '18px', fill: '#ffffff' });
 }
+
+function generateRandomSolarMass() {
+    return Math.random() * 100;
+}
+
+function generateStellarTemperature() {
+    // Generate a random temperature between 10,000 K and 3,000,000 K
+    let temperature = Math.random() * (3000000 - 10000) + 10000;
+    return temperature.toFixed(2);
+}
+
+function calculateStellarFuel(mass, temperature) {
+    // Assuming 10% of the star's mass is fuel for fusion
+    const fuelMass = mass * 0.1; // in solar masses
+
+    // Convert fuel mass to kilograms (1 solar mass = 1.989e30 kg)
+    const fuelKg = fuelMass * 100;
+
+    // Estimate the energy produced per unit mass (a rough estimate)
+    // For a proto-star, assume fusion is inefficient at lower temperatures
+    const fusionEnergyPerKg = 3.8e2; // Rough estimate for hydrogen fusion energy per kg (in joules)
+
+    // Energy released (in joules)
+    const totalEnergy = fuelKg * fusionEnergyPerKg;
+
+    // If temperature is below threshold for fusion (1-3 million K), we assume fusion is not yet happening
+    const fusionThresholdTemp = 10000000; // 10 million Kelvin for hydrogen fusion to start
+    const fusionStatus = temperature >= fusionThresholdTemp ? "Fusion is happening" : "Fusion not yet happening";
+
+    return {
+        fuelMass: fuelMass,  // Fuel mass in solar masses
+        totalEnergy: totalEnergy.toExponential(2),  // Energy in joules
+        fusionStatus: fusionStatus,
+    };
+}
+
 
 export default gameCreate;

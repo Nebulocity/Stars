@@ -1,5 +1,5 @@
-import TitleScene from '/test/js/scene_title.js';
-import GameScene from '/test/js/scene_game.js';
+import TitleScene from '/js/scene_title.js';
+import GameScene from '/js/scene_game.js';
 
 var config = {
     type: Phaser.AUTO,
