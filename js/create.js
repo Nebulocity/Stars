@@ -1,8 +1,13 @@
 // import { createGasEmitter } from './gasvisuals.js';
 
+
+
 function gameCreate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
+
+	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 
 	// Set world bounds
 	this.physics.world.setBounds(0, 0, 800, 252);
@@ -37,56 +42,64 @@ function gameCreate() {
 
 	// Used to max out or clamp values so they're not indecipherable
 	const MIN_VAL = 1;
-	const MAX_VAL = 1000;
+	const MAX_VAL = 1e3;
 
 	// Generate some starting stats for the stellar gas
-	var mass = generateRandomStellarMass();
-	var temperature = parseFloat(generateStellarTemperature());
-	var fusionStats = calculateStellarFuel(mass, temperature);
-	var fuelMass = parseFloat(fusionStats.fuelMass);
-	var totalEnergy = parseFloat(fusionStats.totalEnergy);
-	var fusionStatus = fusionStats.fusionStatus;
+	var mass = Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
 	
 	// Star initial state
 	this.starState = {
+		phase: 'Hydrogen atoms',
+		status: 'Stable',
+		
 		mass: mass,
 		volume: 0,
 		density: 0,
-		temperature: temperature,
-		fuelMass: 0,
-		fuelEnergy: 0,
-		fusionStatus: fusionStatus,
-		gravity: 0,
-		gravitationalForce: 0,
+		temperature: 10, // Kelvin
 		pressure: 0,
-		balance: 'Stable',
-		radius: 10,
-		starArea: 0,
-		phase: 'Solar gas',
-		lifetime: 0
+		radius: 1e11, // Meters
+		
+		jeansMass: 0,
+		isCollapsing: false,
+		hasFusion: false,
+		
+		lifetime: 0,
+		
 	};
-
-
 
 	// Create star
 	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xffff00).setDepth(10);
 	this.star.visible = false;
+	console.log("A quaint collection of Hydrogen atoms exists in the universe...");
 	
-	this.cloud = this.physics.add.sprite(centerX, centerY, 'cloud').setScale(.15);
-	
-	// const emitter = this.add.particles(0, 0, 'purple', {
-		// speed: 24,
-		// lifespan: 1500,
-		// quantity: 10,
-		// scale: { start: 0.4, end: 0 },
-		// emitting: false,
-		// emitZone: { type: 'edge', source: this.star.getBounds(), quantity: 32 },
-		// duration: 0
+	// const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+	// graphics.fillStyle(0xffffff, 1);
+	// graphics.fillCircle(4, 4, 4);
+	// graphics.generateTexture('gasParticle', 8, 8);
+
+	// this.gasParticles = this.add.particles('gasParticle', {
+		// emitters: {
+			// x: centerX,
+			// y: centerY,
+			// angle: { min: 0, max: 360 },
+			// speed: { min: 10, max: 60 },
+			// lifespan: { min: 2000, max: 4000 },
+			// quantity: 25,
+			// frequency: 150,
+			// scale: { start: 1.2, end: 0 },
+			// alpha: { start: 0.4, end: 0 },
+			// tint: [0xffcc66, 0xff9966, 0xffff99],
+			// blendMode: 'ADD'
+		// }
 	// });
 
-	// emitter.start(2000);
+	// this.gasEmitter = this.gasParticles.emitters.list[0];
 
+	// star.gasEmitter = this.gasEmitter;
+	// star.gasParticles = this.gasParticles;
 
+	
+	
 	
 
 	// Pulse animation
@@ -106,10 +119,11 @@ function gameCreate() {
 	// **** BUTTONS ****
 	// *****************
 	
-	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	addBtn.on('pointerdown', () => {
-		const amountToAdd = Phaser.Math.FloatBetween(0.1, 9.99);
-		
+		var exponent = Math.floor(Math.random() * (5- 2.5 + 2.5)) + 2.5;
+		var base = Math.floor(Math.random() * (25- 2.5 + 2.5)) + 25;
+		var amountToAdd = Math.pow(base, exponent);
+				
 		this.tweens.add({
 			targets: this.starState,
 			mass: this.starState.mass + amountToAdd,
@@ -117,18 +131,19 @@ function gameCreate() {
 			ease: 'Linear'
 		})
 	});
+	
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
-	// Subtract hydrogen button
-	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+
+	
 	subBtn.on('pointerdown', () => {
-		const amountToRemove = Phaser.Math.FloatBetween(0.1, 9.99);
+		var exponent = Math.floor(Math.random() * (20 - 1 + 1)) + 1;
+		var base = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
+		var amountToRemove = Math.pow(base, exponent);
 		
 		if ((this.starState.mass - amountToRemove) <= 0) {
-			
-			showWarning(this, "Cannot remove mass, you have too little!");
-			
-			console.log("Cannot remove mass, you have too little!");
+			this.starState.mass = 0;
+			showWarning(this, "Your cloud has no mass!");
 		}
 		else {
 			this.tweens.add({
@@ -144,42 +159,6 @@ function gameCreate() {
 
 }
 
-
-// Functions used to generate stellar stats
-function generateRandomStellarMass() {
-    return Math.random() * 100;
-}
-
-function generateStellarTemperature() {
-    // Generate a random temperature between 1,000 K and 1,000,000 K
-    let temperature = Math.random() * (500000 - 1000) + 10000;
-    return temperature.toFixed(2);
-}
-
-function calculateStellarFuel(mass, temperature) {
-    // Assuming 10% of the star's mass is fuel for fusion
-    const fuelMass = mass * 0.1; // in solar masses
-
-    // Convert fuel mass to kilograms (1 solar mass = 1.989e30 kg)
-    const fuelKg = fuelMass * 100;
-
-    // Estimate the energy produced per unit mass (a rough estimate)
-    // For a proto-star, assume fusion is inefficient at lower temperatures
-    const fusionEnergyPerKg = 3.8e2; // Rough estimate for hydrogen fusion energy per kg (in joules)
-
-    // Energy released (in joules)
-    const totalEnergy = fuelKg * fusionEnergyPerKg;
-
-    // If temperature is below threshold for fusion (1-3 million K), assume fusion is not yet happening
-    const fusionThresholdTemp = 10000000; // 10 million Kelvin for hydrogen fusion to start
-    const fusionStatus = temperature >= fusionThresholdTemp ? "Fusion is happening" : "Fusion not yet happening";
-
-    return {
-        fuelMass: fuelMass,  // Fuel mass in solar masses
-        totalEnergy: totalEnergy.toExponential(2),  // Energy in joules
-        fusionStatus: fusionStatus,
-    };
-}
 
 function showWarning(scene, message) {
 	scene.tweens.killTweensOf(scene.warningText);
