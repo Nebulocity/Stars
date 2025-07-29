@@ -6,9 +6,6 @@ function gameCreate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
 
-	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
-	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
-
 	// Set world bounds
 	this.physics.world.setBounds(0, 0, 800, 252);
 
@@ -24,7 +21,15 @@ function gameCreate() {
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
 
 	// Warning text
-	this.warningText = this.add.text(centerX, centerY/2, '', {
+	this.infoText = this.add.text(centerX, centerY/2 + (centerY/2), '', {
+		fontSize: '24px',
+		color: '#00ffff', 
+		fontStyle: 'bold',
+		padding: {x:10, y:6 }
+	}).setOrigin(0.5).setAlpha(0);
+	
+	// Warning text
+	this.warningText = this.add.text(centerX, centerY/2 + (centerY/2), '', {
 		fontSize: '24px',
 		color: '#ff0000', 
 		fontStyle: 'bold',
@@ -119,49 +124,70 @@ function gameCreate() {
 	// **** BUTTONS ****
 	// *****************
 	
+	// Add hydrogen button
+	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	addBtn.on('pointerdown', () => {
 		var exponent = Math.floor(Math.random() * (5- 2.5 + 2.5)) + 2.5;
 		var base = Math.floor(Math.random() * (25- 2.5 + 2.5)) + 25;
 		var amountToAdd = Math.pow(base, exponent);
-				
+		
 		this.tweens.add({
 			targets: this.starState,
 			mass: this.starState.mass + amountToAdd,
 			duration: 2000,
 			ease: 'Linear'
 		})
+		
+		showInfo(this, `+${amountToAdd.toFixed(2)} Hydrogen`);
 	});
-	
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
-
-	
+	// Subtract hydrogen button
+	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	subBtn.on('pointerdown', () => {
 		var exponent = Math.floor(Math.random() * (20 - 1 + 1)) + 1;
 		var base = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
 		var amountToRemove = Math.pow(base, exponent);
 		
-		if ((this.starState.mass - amountToRemove) <= 0) {
-			this.starState.mass = 0;
-			showWarning(this, "Your cloud has no mass!");
-		}
-		else {
-			this.tweens.add({
-				targets: this.starState,
-				mass: this.starState.mass - amountToRemove,
-				duration: 2000,
-				ease: 'Linear'
-			})
-		}
+		this.tweens.add({
+			targets: this.starState,
+			mass: this.starState.mass - amountToRemove,
+			duration: 2000,
+			ease: 'Linear'
+		})
+			
+		showWarning(this, `-${amountToRemove.toFixed(2)} Hydrogen`);
 	});
-	
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
-
+	
 }
 
 
-function showWarning(scene, message) {
+function showInfo(scene, message) {
+	scene.tweens.killTweensOf(scene.infoText);
+	scene.infoText.setText("");
+	
 	scene.tweens.killTweensOf(scene.warningText);
+	scene.warningText.setText("");
+	
+	scene.infoText.setText(message);
+	
+	scene.infoText.setAlpha(1);
+	
+	scene.tweens.add({
+		targets: scene.infoText,
+		alpha: 0,
+		duration: 3000,
+		ease: 'Sine.easeOut'
+	});
+};
+
+function showWarning(scene, message) {
+	scene.tweens.killTweensOf(scene.infoText);
+	scene.infoText.setText("");
+	
+	scene.tweens.killTweensOf(scene.warningText);
+	scene.warningText.setText("");
 	
 	scene.warningText.setText(message);
 	
