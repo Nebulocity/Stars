@@ -6,10 +6,6 @@ function gamePreload() {
     this.load.image('space_layer2', 'assets/space/space_layer2.png');
     this.load.image('space_layer3', 'assets/space/space_layer3.png');
 
-	// Gas
-	this.load.image('cloud', 'assets/space/cloud.png');
-
-
 	// buttons
 	this.load.image('gasButton', 'assets/buttons/tealButton.png');
 	this.load.image('gravButton', 'assets/buttons/blueButton.png');
