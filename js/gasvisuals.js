@@ -17,24 +17,24 @@ export function createGasEmitter(scene, star) {
             emitting: false
         });
 
-	// scene.gasEmitter = scene.gasParticles.emitters.list[0];
+	scene.gasEmitter = scene.gasParticles.emitters.list[0];
 }
 
-// export function updateGasEmitter(scene, star) { if (!scene.gasEmitter) return;
+export function updateGasEmitter(scene, star) { if (!scene.gasEmitter) return;
 
-	// const quantity = Phaser.Math.Clamp(star.mass / 5, 2, 20);
-	// const scaleStart = Phaser.Math.Clamp(star.temperature / 1e6, 0.5, 2);
+	const quantity = Phaser.Math.Clamp(star.mass / 5, 2, 20);
+	const scaleStart = Phaser.Math.Clamp(star.temperature / 1e6, 0.5, 2);
 
-	// scene.gasEmitter.setQuantity(quantity);
-	// scene.gasEmitter.setScale({ start: scaleStart, end: 0 });
-	// scene.gasEmitter.setPosition(scene.star.x, scene.star.y);
+	scene.gasEmitter.setQuantity(quantity);
+	scene.gasEmitter.setScale({ start: scaleStart, end: 0 });
+	scene.gasEmitter.setPosition(scene.star.x, scene.star.y);
 
-	// if (star.fusionFuel <= 0) {
-		// scene.gasEmitter.setTint(0x666699);
-	// } else if (star.temperature > 1e7) {
-		// scene.gasEmitter.setTint(0xffee88);
-	// } else {
-		// scene.gasEmitter.setTint(0xffcc66);
-	// }
+	if (star.fusionFuel <= 0) {
+		scene.gasEmitter.setTint(0x666699);
+	} else if (star.temperature > 1e7) {
+		scene.gasEmitter.setTint(0xffee88);
+	} else {
+		scene.gasEmitter.setTint(0xffcc66);
+	}
 
-// }
+}
