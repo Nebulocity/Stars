@@ -1,15 +1,15 @@
 // import { updateGasEmitter } from './gasvisuals.js';	
 	
-	/*
-		STAR FACTS
-		----------------
-		Star facts that I found on Google:
-		
-		Average protostar has a mass between 10-50 solar masses and a core temp up to 1 million Kelvin.
-		Average main sequence stars have a mass between 1 and 100 solar masses and a core temp up to 15 million Kelvin.
-		Average red giant stars have a mass between .3 to 8 times its average mass and core temp up to around 100 million Kelvin.
-		Average unstable star, going supernova, is usually between 130-250 solar masses and a core temp between 6,000-40,000 Kelvin.
-	*/
+/*
+	STAR FACTS
+	----------------
+	Star facts that I found on Google:
+	
+	Average protostar has a mass between 10-50 solar masses and a core temp up to 1 million Kelvin.
+	Average main sequence stars have a mass between 1 and 100 solar masses and a core temp up to 15 million Kelvin.
+	Average red giant stars have a mass between .3 to 8 times its average mass and core temp up to around 100 million Kelvin.
+	Average unstable star, going supernova, is usually between 130-250 solar masses and a core temp between 6,000-40,000 Kelvin.
+*/
 
 // *******************
 // **** CONSTANTS ****
@@ -22,7 +22,9 @@ const GRAVITATIONAL_CONSTANT = 6.674e-11; // Gravitational Constant (m^3 kg^-1 s
 const BOLTZMANN_CONSTANT = 1.38e-23;   // Boltzmann Constant (J/K)
 const MEAN_MOLECULAR_WEIGHT = 2.3 * 1.6605e-27; // Mean Molecular Weight (kg) for molecular hydrogen
 
-
+const EXPANSION_FACTOR = 0.01; // How fast radius changes
+const GRAVITY_PRESSURE_BALANCE = 3.0; // Ideal pressure/gravity ratio
+	
 function gameUpdate() {
 	
     const star = this.starState;
@@ -33,11 +35,14 @@ function gameUpdate() {
     this.space_layer3.tilePositionX += 0.25;
 
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
-	star.density = (star.mass / star.volume);
+	star.density = (star.mass / star.volume);	
+	
+	console.log("density: ", star.density, "mass: ", star.mass, "volume: ", star.volume);
+	
 	star.gravity = GRAVITATIONAL_CONSTANT * star.mass / (star.radius * star.radius); 
 	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
-	
-	if (!star.hasFusion && !star.isCollapsing) {
+		
+	if (!star.hasFusion) {
 		star.mass += 1;
 	}
 
@@ -48,9 +53,13 @@ function gameUpdate() {
 	
 	if (star.mass > star.jeansMass && !star.isCollapsing) { //
 		star.isCollapsing = true;
-		console.log("(Mass > JeansMass) Cloud begins to collapse!");
+		showWarning(this, "(Mass > JeansMass) Cloud begins to collapse!");
 		star.status = "Collapsing";
 	}	
+	
+	// ***********************
+	// **** IF COLLAPSING ****
+	// ***********************
 	
 	if (star.isCollapsing) {
 		star.status = "Collapsing";
@@ -71,85 +80,71 @@ function gameUpdate() {
 		// Temperature threshold for protostar core
 		if (star.temperature > 1e6 && star.radius < 1e10 && !star.hasFusion) { 
 			star.hasFusion = true;
-			star.phase = "Protostar";
-			star.status = "Fusion";
+			// star.phase = "Protostar";
+			// star.status = "Fusion";
 		}
 	}
 
-	if (star.hasFusion) {
+	
 
-		if (star.mass >= .08 && star.mass <= 1 && star.temperature > 1e6)
-		{
-			console.log("Protostar formed!");
-			star.phase = "Protostar";
-			star.status = "Fusion";
-		}
-		else if ((star.mass > .09 && star.mass <= 150) && (star.temperature > 1e7 && star.temperature <= 15e7)) {
-			console.log("Main Sequence achieved!");
+	// *************************
+	// **** IF FUSING ATOMS ****
+	// *************************
+	
+	if (star.hasFusion) {
+		
+		if ((star.mass > .09 && star.mass <= 150) && (star.temperature > 1e7 && star.temperature <= 15e7)) {
+			showInfo(this, "Main Sequence achieved!");
 			star.phase = "Main Sequence";
 			star.status = "H Fusion OK";
 		}
 		else if ((star.mass > (star.mass * .3) && star.mass <= (star.mass * .8)) && (star.temperature > 15e7 && star.temperature <= 1e8)) {
-			console.log("Red Giant!");
+			showInfo(this, "Red Giant!");
 			star.phase = "Red Giant";
 			star.status = "He Fusion OK";
 		}
 		else if ((star.mass > 25 && star.mass <= 50) && (star.temperature > 2e8 && star.temperature <= 2e11)) {
-			console.log("Supernova!");
+			showInfo(this, "Supernova!");
 			star.phase = "Supernova";
 			star.status = "Critical!";
 		}
 		else {
-			star.phase = "Molecular gas";
-			star.status = "Igniting";
+			// This section will conflit with the pressure/gravity section below and
+			// flicker the status.  Fix it.
+			
+			star.phase = "Protostar";
+			star.status = "Fusion!";
 		}
-    }
+		
 	
-	// Status updates
-	if (star.hasFusion) {
-		this.statusText.setText(
-			`*** Stellar Profile ***\n` +
-			`Phase: ${star.phase}\n` +
-			`status: ${star.status}\n\n` +
-			
-			`Mass: ${star.mass.toFixed(2)}\n` +
-			`Core Density: ${(star.density * 1e6).toFixed(2)}\n` +
-			`Volume: ${star.volume}\n` +
-			`Radius: ${star.radius.toFixed(2)}\n` +
-			`Core Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
-			
-			`Gravity: ${star.gravity.toFixed(2)} m/s²\n` +
-			`Pressure: ${star.pressure.toFixed(2)} Pa\n\n` +
-			
-			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
-		);
+		// *******************************
+		// **** EXPANSION/CONTRACTION ****
+		// *******************************
+		
+		var pressureToGravityRatio = star.pressure / star.gravity;
+		
+		// console.log("pressureToGravityRatio: ", pressureToGravityRatio, "GRAVITY_PRESSURE_BALANCE: ", GRAVITY_PRESSURE_BALANCE);
+		
+		if (pressureToGravityRatio >= 3) {
+			// Star expands
+			star.radius *= 1 + EXPANSION_FACTOR * (pressureToGravityRatio - 1);
+			// star.status = "Expanding";
+		}
+		else if (pressureToGravityRatio < 2) {
+			// Star contracts
+			star.radius *= 1 - EXPANSION_FACTOR * (1 - pressureToGravityRatio);
+			// star.status = "Contracting";
+		}
+		else {
+			// Star is stable
+			console.log(pressureToGravityRatio);
+			// star.status = "Stable Fusion";
+		}
+		
+		// // Recalculate volume and density
+		star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
+		star.density = star.mass / star.volume;
 	}
-	else {
-		this.statusText.setText(
-			`*** Stellar Profile ***\n` +
-			`Phase: ${star.phase}\n` +
-			`status: ${star.status}\n\n` +
-			
-			`Mass: ${star.mass.toFixed(2)}\n` +
-			`Volume: ${star.volume}\n` +
-
-			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
-		);
-	}
-	
-	// *******************************
-	// **** EXPANSION/CONTRACTION ****
-	// *******************************
-	
-	// if (star.pressure == star.gravity * GRAVITY_PRESSURE_THRESHOLD) {
-		// star.status = "Stable";
-	// }
-	// else if (star.pressure > star.gravity * GRAVITY_PRESSURE_THRESHOLD) {
-		// star.status = "Expanding";
-	// }
-	// else {
-		// star.status = "Contracting";
-	// }
 	
 	
 	
@@ -157,8 +152,23 @@ function gameUpdate() {
 	// **** DISPLAY STATS ****
 	// ***********************
 	
-
-
+	this.statusText.setText(
+		`*** Stellar Profile ***\n` +
+		`Phase: ${star.phase}\n` +
+		`status: ${star.status}\n\n` +
+		
+		`Mass: ${star.mass.toLocaleString()}\n` +
+		`Density: ${star.density.toLocaleString()}\n` +
+		`Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
+		`Radius: ${star.radius.toLocaleString()}\n` +
+		`Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
+		
+		`Radius: ${star.radius.toLocaleString()} m\n` +
+		`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
+		`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
+		
+		`Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
+	);
 }
 
 
