@@ -18,20 +18,14 @@
 const MAX_RADIUS = 300;
 const MIN_RADIUS = 1;
 
-const GRAVITATIONAL_CONSTANT = 6.67; // Gravitational Constant (m^3 kg^-1 s^-2)
-const BOLTZMANN_CONSTANT = 1.38;   // Boltzmann Constant (J/K)
-const MEAN_MOLECULAR_WEIGHT = 2.3 * 1.660; // Mean Molecular Weight (kg) for molecular hydrogen
+const GRAVITATIONAL_CONSTANT = .0667; // Gravitational Constant (m^3 kg^-1 s^-2)
+const BOLTZMANN_CONSTANT = .138;   // Boltzmann Constant (J/K)
+const MEAN_MOLECULAR_WEIGHT = .23 * .166; // Mean Molecular Weight (kg) for molecular hydrogen
 
 const EXPANSION_FACTOR = 0.01; // How fast radius changes
 const GRAVITY_PRESSURE_BALANCE = 3.0; // Ideal pressure/gravity ratio
-	
-// Scaling factor to simplify numbers
-const SCALE_FACTOR = 1e11;  // Adjust this factor as needed
 
-// Simplified constants
-const GRAVITATIONAL_CONSTANT_SCALED = 6.67 / SCALE_FACTOR;  // Simplified gravitational constant
-const BOLTZMANN_CONSTANT_SCALED = 1.38 / SCALE_FACTOR;  // Simplified Boltzmann constant
-const MEAN_MOLECULAR_WEIGHT_SCALED = 2.3 * 1.66 / SCALE_FACTOR;  // Simplified mean molecular weight	
+var hasCalcJeans = false;
 	
 function gameUpdate() {
 	
@@ -42,21 +36,29 @@ function gameUpdate() {
     this.space_layer2.tilePositionX += 0.15;
     this.space_layer3.tilePositionX += 0.25;
 
+	// Calculate volume, denisty, gravitational force, and outward pressure
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
 	star.density = (star.mass / star.volume);		
 	star.gravity = GRAVITATIONAL_CONSTANT * star.mass / (star.radius * star.radius); 
 	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
 		
 	if (!star.hasFusion) {
-		star.mass += 1;
+		star.mass += .001;
 	}
 
-    star.lifetime += this.game.loop.delta * 2;
+    star.lifetime += this.game.loop.delta * .0001;
 	
 	// Jeans Instability Check
 	star.jeansMass = calculateJeansMass(star.temperature, star.density);
 	
 	if (star.mass > star.jeansMass && !star.isCollapsing) { //
+		
+		if (hasCalcJeans == false) {
+			console.log("test");
+			console.log("Mass: ", star.mass, "JeansMass: ", star.jeansMass, "hasCalcJeans: ", hasCalcJeans);
+			hasCalcJeans = true;
+		}
+		
 		star.isCollapsing = true;
 		showWarning(this, "(Mass > JeansMass) Cloud begins to collapse!");
 		star.status = "Collapsing";
@@ -114,7 +116,7 @@ function gameUpdate() {
 			star.status = "Critical!";
 		}
 		else {
-			// This section will conflit with the pressure/gravity section below and
+			// This section will conflict with the pressure/gravity section below and
 			// flicker the status.  Fix it.
 			
 			star.phase = "Protostar";
@@ -157,45 +159,27 @@ function gameUpdate() {
 	// **** DISPLAY STATS ****
 	// ***********************
 	
-	// this.statusText.setText(
-		// `*** Stellar Profile ***\n` +
-		// `Phase: ${star.phase}\n` +
-		// `status: ${star.status}\n\n` +
-		
-		// `Mass: ${star.mass.toLocaleString()}\n` +
-		// `Density: ${star.density.toLocaleString()}\n` +
-		// `Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
-		// `Radius: ${star.radius.toLocaleString()}\n` +
-		// `Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
-		
-		// `Radius: ${star.radius.toLocaleString()} m\n` +
-		// `Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
-		// `Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
-		
-		// `Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
-	// );
-	
-	
-	// Apply the same scaling to mass, pressure, radius, etc.
-    star.massScaled = parseFloat((star.mass / 1.98));
-	star.radiusScaled = star.radius / SCALE_FACTOR;
-	star.density = (star.massScaled / star.volume);
-	star.gravity = GRAVITATIONAL_CONSTANT_SCALED * star.massScaled / Math.pow(star.radiusScaled, 2); 
-	star.pressure = (star.density * BOLTZMANN_CONSTANT_SCALED * star.temperature) / MEAN_MOLECULAR_WEIGHT_SCALED;
-	
-	console.log("Mass (scaled):", star.massScaled);
-	
 	this.statusText.setText(
 		`*** Stellar Profile ***\n` +
 		`Phase: ${star.phase}\n` +
-		`Status: ${star.status}\n\n` +
+		`status: ${star.status}\n` +
+		`Collapsing?: ${star.isCollapsing}\n\n` +
 		
-		`Mass: ${star.massScaled.toFixed(2)} M☉ (scaled)\n` +
-		`Density: ${star.density.toLocaleString()} g/cm³\n` +
-		`Temp: ${star.temperature.toLocaleString()} K\n` +
-		`Radius: ${star.radiusScaled.toLocaleString()} m (scaled)\n`
+		`Mass: ${star.mass.toFixed(2)} M☉\n` +
+		`JeansMass: ${star.jeansMass.toFixed(2)} M☉\n` +
+		`Density: ${star.density.toLocaleString()}\n` +
+		`Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
+		`Radius: ${star.radius.toLocaleString()}\n` +
+		`Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
+		
+		`Radius: ${star.radius.toLocaleString()} m\n` +
+		`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
+		`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
+		
+		`Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
 	);
-
+	
+	
 }
 
 
@@ -216,49 +200,17 @@ function calculateGravitationalForce(mass, radius) {
 
 function calculateStellarstatus(pressure, gravitationalForce) {
 	let status = pressure > gravitationalForce ? "Expanding" : "Collapsing";
-	
 	return status;
 }
 
-function calculateStellarFuel(mass, temperature) {
-    // Assuming 10% of the star's mass is fuel for fusion
-    const fuelMass = mass * 0.1; // in solar masses
-
-    // Convert fuel mass to kilograms (1 solar mass = 1.989e30 kg)
-    const fuelKg = fuelMass * 100;
-
-    // Estimate the energy produced per unit mass (a rough estimate)
-    // For a proto-star, assume fusion is inefficient at lower temperatures
-    const fusionEnergyPerKg = 3.8e2; // Rough estimate for hydrogen fusion energy per kg (in joules)
-
-    // Energy released (in joules)
-    const totalEnergy = fuelKg * fusionEnergyPerKg;
-
-    // If temperature is below threshold for fusion (1-3 million K), assume fusion is not yet happening
-    const fusionThresholdTemp = 10000000; // 10 million Kelvin for hydrogen fusion to start
-    const fusionStatus = temperature >= fusionThresholdTemp ? "Fusion is happening" : "Fusion not yet happening";
-
-    return {
-        fuelMass: fuelMass,  // Fuel mass in solar masses
-        totalEnergy: totalEnergy.toExponential(2),  // Energy in joules
-        fusionStatus: fusionStatus,
-    };
-}
-
-function calculateFusionRate(mass, temperature) {
-    // Constant for fusion rate
-    const C = Math.random() * 10; 
-
-    // Fusion rate calculation (in terms of solar masses per second)
-    let fusionRate = C * mass * temperature;
-
-    return fusionRate;
-}
 
 // Jeans Mass calculation
 function calculateJeansMass(temperature, density) {
 	const soundSpeed = Math.sqrt((BOLTZMANN_CONSTANT * temperature) / MEAN_MOLECULAR_WEIGHT);
+	
 	const jeansMass = (soundSpeed * soundSpeed * soundSpeed) / (Math.pow(GRAVITATIONAL_CONSTANT, 1.5) * Math.sqrt(density));
+
+	// console.log("soundSpeed: ", soundSpeed, "BOLTZMANN_CONSTANT: ", BOLTZMANN_CONSTANT, "Temp: ", temperature, "Weight: ", MEAN_MOLECULAR_WEIGHT, "JeansMass: ", jeansMass);
 	return jeansMass; //
 }
 	
