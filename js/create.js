@@ -50,7 +50,9 @@ function gameCreate() {
 	const MAX_VAL = 1e3;
 
 	// Generate some starting stats for the stellar gas
-	var mass = Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
+	var mass = Math.random() * (2 * .0001) + .0001 * .0001;
+	var temperature = Math.random() * (2 * .0001) + .0001 * .0001;
+	var radius = Math.random() * (2 * .0001) + .0001 * .0001;
 	
 	// Star initial state
 	this.starState = {
@@ -60,16 +62,15 @@ function gameCreate() {
 		mass: mass,
 		volume: 0,
 		density: 0,
-		temperature: 10, // Kelvin
+		temperature: temperature, // Kelvin
 		pressure: 0,
-		radius: 1e11, // Meters
+		radius: radius, // Meters
 		
 		jeansMass: 0,
 		isCollapsing: false,
 		hasFusion: false,
 		
 		lifetime: 0,
-		
 	};
 
 	// Create star
