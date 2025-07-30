@@ -128,9 +128,8 @@ function gameCreate() {
 	const addBtn = this.add.image(centerX + 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	addBtn.on('pointerdown', () => {
-		var exponent = Math.floor(Math.random() * (5- 2.5 + 2.5)) + 2.5;
-		var base = Math.floor(Math.random() * (25- 2.5 + 2.5)) + 25;
-		var amountToAdd = Math.pow(base, exponent);
+
+		var amountToAdd = Math.random() * (.05 - .005 + .005) + .05;
 		
 		this.tweens.add({
 			targets: this.starState,
@@ -148,18 +147,22 @@ function gameCreate() {
 	const subBtn = this.add.image(centerX - 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	subBtn.on('pointerdown', () => {
-		var exponent = Math.floor(Math.random() * (20 - 1 + 1)) + 1;
-		var base = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-		var amountToRemove = Math.pow(base, exponent);
+
+		var amountToRemove = Math.random() * (.05 - .005 + .005) + .05;
 		
-		this.tweens.add({
-			targets: this.starState,
-			mass: this.starState.mass - amountToRemove,
-			duration: 2000,
-			ease: 'Linear'
-		})
+		if (this.starState.mass - amountToRemove <= 0) {
+			showWarning(this, "Unable to remove mass, your star is too small!");
+		}
+		else {
+			showWarning(this, `-${amountToRemove.toFixed(2)} Hydrogen`);
 			
-		showWarning(this, `-${amountToRemove.toFixed(2)} Hydrogen`);
+			this.tweens.add({
+				targets: this.starState,
+				mass: this.starState.mass - amountToRemove,
+				duration: 2000,
+				ease: 'Linear'
+			})
+		}
 	});
 	
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
