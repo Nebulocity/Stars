@@ -8,12 +8,12 @@ function gameCreate() {
 
 	// Set world bounds
 	this.physics.world.setBounds(0, 0, 800, 252);
-
-	// Create space background layers
+	
 	for (let i = 1; i <= 3; i++) {
 		const layer = this.make.graphics({ x: 0, y: 0, add: false });
 		layer.generateTexture(`space_layer${i}`, 0, 0);
-		this[`space_layer${i}`] = this.add.tileSprite(0, 0, 2400, 900, `space_layer${i}`).setScale(1);
+		this[`space_layer${i}`] = this.add.tileSprite(0, 0, 1280, 720, `space_layer${i}`).setScale(1);
+		this[`space_layer${i}`].setOrigin(0, 0); // Optional: ensures the sprite is aligned to the top-left corner
 		this[`space_layer${i}`].depth = -99 + i;
 	}
 
@@ -125,7 +125,8 @@ function gameCreate() {
 	// *****************
 	
 	// Add hydrogen button
-	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const addBtn = this.add.image(centerX + 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	
 	addBtn.on('pointerdown', () => {
 		var exponent = Math.floor(Math.random() * (5- 2.5 + 2.5)) + 2.5;
 		var base = Math.floor(Math.random() * (25- 2.5 + 2.5)) + 25;
@@ -140,10 +141,12 @@ function gameCreate() {
 		
 		showInfo(this, `+${amountToAdd.toFixed(2)} Hydrogen`);
 	});
+	
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
 	// Subtract hydrogen button
-	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const subBtn = this.add.image(centerX - 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	
 	subBtn.on('pointerdown', () => {
 		var exponent = Math.floor(Math.random() * (20 - 1 + 1)) + 1;
 		var base = Math.floor(Math.random() * (10 - 1 + 1)) + 1;
@@ -158,6 +161,7 @@ function gameCreate() {
 			
 		showWarning(this, `-${amountToRemove.toFixed(2)} Hydrogen`);
 	});
+	
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 	
 }

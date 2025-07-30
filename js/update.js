@@ -18,12 +18,20 @@
 const MAX_RADIUS = 300;
 const MIN_RADIUS = 1;
 
-const GRAVITATIONAL_CONSTANT = 6.674e-11; // Gravitational Constant (m^3 kg^-1 s^-2)
-const BOLTZMANN_CONSTANT = 1.38e-23;   // Boltzmann Constant (J/K)
-const MEAN_MOLECULAR_WEIGHT = 2.3 * 1.6605e-27; // Mean Molecular Weight (kg) for molecular hydrogen
+const GRAVITATIONAL_CONSTANT = 6.67; // Gravitational Constant (m^3 kg^-1 s^-2)
+const BOLTZMANN_CONSTANT = 1.38;   // Boltzmann Constant (J/K)
+const MEAN_MOLECULAR_WEIGHT = 2.3 * 1.660; // Mean Molecular Weight (kg) for molecular hydrogen
 
 const EXPANSION_FACTOR = 0.01; // How fast radius changes
 const GRAVITY_PRESSURE_BALANCE = 3.0; // Ideal pressure/gravity ratio
+	
+// Scaling factor to simplify numbers
+const SCALE_FACTOR = 1e11;  // Adjust this factor as needed
+
+// Simplified constants
+const GRAVITATIONAL_CONSTANT_SCALED = 6.67 / SCALE_FACTOR;  // Simplified gravitational constant
+const BOLTZMANN_CONSTANT_SCALED = 1.38 / SCALE_FACTOR;  // Simplified Boltzmann constant
+const MEAN_MOLECULAR_WEIGHT_SCALED = 2.3 * 1.66 / SCALE_FACTOR;  // Simplified mean molecular weight	
 	
 function gameUpdate() {
 	
@@ -35,10 +43,7 @@ function gameUpdate() {
     this.space_layer3.tilePositionX += 0.25;
 
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
-	star.density = (star.mass / star.volume);	
-	
-	console.log("density: ", star.density, "mass: ", star.mass, "volume: ", star.volume);
-	
+	star.density = (star.mass / star.volume);		
 	star.gravity = GRAVITATIONAL_CONSTANT * star.mass / (star.radius * star.radius); 
 	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
 		
@@ -137,7 +142,7 @@ function gameUpdate() {
 		}
 		else {
 			// Star is stable
-			console.log(pressureToGravityRatio);
+			// console.log(pressureToGravityRatio);
 			// star.status = "Stable Fusion";
 		}
 		
@@ -152,23 +157,45 @@ function gameUpdate() {
 	// **** DISPLAY STATS ****
 	// ***********************
 	
+	// this.statusText.setText(
+		// `*** Stellar Profile ***\n` +
+		// `Phase: ${star.phase}\n` +
+		// `status: ${star.status}\n\n` +
+		
+		// `Mass: ${star.mass.toLocaleString()}\n` +
+		// `Density: ${star.density.toLocaleString()}\n` +
+		// `Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
+		// `Radius: ${star.radius.toLocaleString()}\n` +
+		// `Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
+		
+		// `Radius: ${star.radius.toLocaleString()} m\n` +
+		// `Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
+		// `Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
+		
+		// `Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
+	// );
+	
+	
+	// Apply the same scaling to mass, pressure, radius, etc.
+    star.massScaled = parseFloat((star.mass / 1.98));
+	star.radiusScaled = star.radius / SCALE_FACTOR;
+	star.density = (star.massScaled / star.volume);
+	star.gravity = GRAVITATIONAL_CONSTANT_SCALED * star.massScaled / Math.pow(star.radiusScaled, 2); 
+	star.pressure = (star.density * BOLTZMANN_CONSTANT_SCALED * star.temperature) / MEAN_MOLECULAR_WEIGHT_SCALED;
+	
+	console.log("Mass (scaled):", star.massScaled);
+	
 	this.statusText.setText(
 		`*** Stellar Profile ***\n` +
 		`Phase: ${star.phase}\n` +
-		`status: ${star.status}\n\n` +
+		`Status: ${star.status}\n\n` +
 		
-		`Mass: ${star.mass.toLocaleString()}\n` +
-		`Density: ${star.density.toLocaleString()}\n` +
-		`Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
-		`Radius: ${star.radius.toLocaleString()}\n` +
-		`Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
-		
-		`Radius: ${star.radius.toLocaleString()} m\n` +
-		`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
-		`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
-		
-		`Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
+		`Mass: ${star.massScaled.toFixed(2)} M☉ (scaled)\n` +
+		`Density: ${star.density.toLocaleString()} g/cm³\n` +
+		`Temp: ${star.temperature.toLocaleString()} K\n` +
+		`Radius: ${star.radiusScaled.toLocaleString()} m (scaled)\n`
 	);
+
 }
 
 

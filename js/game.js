@@ -1,10 +1,10 @@
-import TitleScene from '/stars/js/scene_title.js';
-import GameScene from '/stars/js/scene_game.js';
+import TitleScene from '/js/scene_title.js';
+import GameScene from '/js/scene_game.js';
 
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 450,
+    width: 1280,
+    height: 720,
     scene: [TitleScene, GameScene]
 };
 
