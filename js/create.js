@@ -52,7 +52,8 @@ function gameCreate() {
 	// Generate some starting stats for the stellar gas
 	var mass = Math.random() * (2 * .0001) + .0001 * .0001;
 	var temperature = Math.random() * (2 * .0001) + .0001 * .0001;
-	var radius = Math.random() * (2 * .0001) + .0001 * .0001;
+	var radius = (Math.random() * (2 * .0001) + .0001 * .0001);
+	console.log("Initial state: Mass: ", mass, "Temp: ", temperature, "Radius: ", radius);
 	
 	// Star initial state
 	this.starState = {
@@ -71,6 +72,7 @@ function gameCreate() {
 		hasFusion: false,
 		
 		lifetime: 0,
+		
 	};
 
 	// Create star
@@ -126,7 +128,7 @@ function gameCreate() {
 	// *****************
 	
 	// Add hydrogen button
-	const addBtn = this.add.image(centerX + 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	addBtn.on('pointerdown', () => {
 
@@ -145,7 +147,7 @@ function gameCreate() {
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 
 	// Subtract hydrogen button
-	const subBtn = this.add.image(centerX - 300, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	subBtn.on('pointerdown', () => {
 
@@ -167,7 +169,6 @@ function gameCreate() {
 	});
 	
 	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
-	
 }
 
 
