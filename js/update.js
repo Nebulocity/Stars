@@ -37,25 +37,20 @@ function gameUpdate() {
     this.space_layer3.tilePositionX += 0.25;
 
 	// Calculate volume, denisty, gravitational force, and outward pressure
+	star.mass += .001
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
 	star.density = (star.mass / star.volume);		
 	star.gravity = GRAVITATIONAL_CONSTANT * star.mass / (star.radius * star.radius); 
 	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
-		
-	if (!star.hasFusion) {
-		star.mass += .001;
-	}
+	star.jeansMass = calculateJeansMass(star.temperature, star.density);
+	star.lifetime += this.game.loop.delta * .0001;
 
-    star.lifetime += this.game.loop.delta * .0001;
+    
 	
 	// Jeans Instability Check
-	star.jeansMass = calculateJeansMass(star.temperature, star.density);
-	
-	if (star.mass > star.jeansMass && !star.isCollapsing) { //
+	if (star.mass > star.jeansMass && !star.isCollapsing) { 
 		
 		if (hasCalcJeans == false) {
-			console.log("test");
-			console.log("Mass: ", star.mass, "JeansMass: ", star.jeansMass, "hasCalcJeans: ", hasCalcJeans);
 			hasCalcJeans = true;
 		}
 		
@@ -128,25 +123,25 @@ function gameUpdate() {
 		// **** EXPANSION/CONTRACTION ****
 		// *******************************
 		
-		var pressureToGravityRatio = star.pressure / star.gravity;
+		// var pressureToGravityRatio = star.pressure / star.gravity;
 		
 		// console.log("pressureToGravityRatio: ", pressureToGravityRatio, "GRAVITY_PRESSURE_BALANCE: ", GRAVITY_PRESSURE_BALANCE);
 		
-		if (pressureToGravityRatio >= 3) {
+		// if (pressureToGravityRatio >= 3) {
 			// Star expands
-			star.radius *= 1 + EXPANSION_FACTOR * (pressureToGravityRatio - 1);
+			// star.radius *= 1 + EXPANSION_FACTOR * (pressureToGravityRatio - 1);
 			// star.status = "Expanding";
-		}
-		else if (pressureToGravityRatio < 2) {
+		// }
+		// else if (pressureToGravityRatio < 2) {
 			// Star contracts
-			star.radius *= 1 - EXPANSION_FACTOR * (1 - pressureToGravityRatio);
+			// star.radius *= 1 - EXPANSION_FACTOR * (1 - pressureToGravityRatio);
 			// star.status = "Contracting";
-		}
-		else {
+		// }
+		// else {
 			// Star is stable
 			// console.log(pressureToGravityRatio);
 			// star.status = "Stable Fusion";
-		}
+		// }
 		
 		// // Recalculate volume and density
 		star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
@@ -165,21 +160,21 @@ function gameUpdate() {
 		`status: ${star.status}\n` +
 		`Collapsing?: ${star.isCollapsing}\n\n` +
 		
-		`Mass: ${star.mass.toFixed(2)} M☉\n` +
-		`JeansMass: ${star.jeansMass.toFixed(2)} M☉\n` +
+		`Mass: ${star.mass.toLocaleString()} M☉\n` +
+		`JeansMass: ${star.jeansMass.toLocaleString()} M☉\n` +
 		`Density: ${star.density.toLocaleString()}\n` +
-		`Volume: ${star.volume.toFixed(4).toLocaleString()}\n` +
-		`Radius: ${star.radius.toLocaleString()}\n` +
+		`Volume: ${star.volume}\n` +
+		`Radius: ${(star.radius / 1000).toLocaleString()}\n` +
 		`Temp: ${Math.round(star.temperature).toLocaleString()} K\n\n` +
 		
-		`Radius: ${star.radius.toLocaleString()} m\n` +
-		`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
-		`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
+		`Radius: ${star.radius.toFixed(2)} m\n` +
+		`Gravity: ${star.gravity.toFixed(2)} m/s²\n` +
+		`Pressure: ${star.pressure.toFixed(2)} Pa\n\n` +
 		
-		`Lifetime: ${star.lifetime.toLocaleString()} Yrs\n\n`
+		`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
 	);
 	
-	
+	console.log("Radius: ", star.radius, "Mass: ", star.mass, "JeansMass: ", star.jeansMass, "hasCalcJeans: ", hasCalcJeans);
 }
 
 
@@ -211,7 +206,7 @@ function calculateJeansMass(temperature, density) {
 	const jeansMass = (soundSpeed * soundSpeed * soundSpeed) / (Math.pow(GRAVITATIONAL_CONSTANT, 1.5) * Math.sqrt(density));
 
 	// console.log("soundSpeed: ", soundSpeed, "BOLTZMANN_CONSTANT: ", BOLTZMANN_CONSTANT, "Temp: ", temperature, "Weight: ", MEAN_MOLECULAR_WEIGHT, "JeansMass: ", jeansMass);
-	return jeansMass; //
+	return jeansMass;
 }
 	
 function showWarning(scene, message) {
