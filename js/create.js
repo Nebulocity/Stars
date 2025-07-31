@@ -21,7 +21,7 @@ function gameCreate() {
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
 
 	// Warning text
-	this.infoText = this.add.text(centerX, centerY/2 + (centerY/2), '', {
+	this.infoText = this.add.text(centerX, centerY/2 + (centerY/2)+100, '', {
 		fontSize: '24px',
 		color: '#00ffff', 
 		fontStyle: 'bold',
@@ -29,7 +29,7 @@ function gameCreate() {
 	}).setOrigin(0.5).setAlpha(0);
 	
 	// Warning text
-	this.warningText = this.add.text(centerX, centerY/2 + (centerY/2), '', {
+	this.warningText = this.add.text(centerX, centerY/2 + (centerY/2)+100, '', {
 		fontSize: '24px',
 		color: '#ff0000', 
 		fontStyle: 'bold',
@@ -50,29 +50,28 @@ function gameCreate() {
 	const MAX_VAL = 1e3;
 
 	// Generate some starting stats for the stellar gas
-	var mass = Math.random() * (2 * .0001) + .0001 * .0001;
-	var temperature = Math.random() * (2 * .0001) + .0001 * .0001;
-	var radius = (Math.random() * (2 * .0001) + .0001 * .0001);
-	console.log("Initial state: Mass: ", mass, "Temp: ", temperature, "Radius: ", radius);
+	// var mass = .1;
+	var mass = Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
+	var temperature = .001;
+	var radius = 2.5;
+	var volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
+	var density = radius * volume * 15;
 	
 	// Star initial state
 	this.starState = {
-		phase: 'Hydrogen atoms',
+		phase: 'Hydrogen Atoms',
 		status: 'Stable',
-		
 		mass: mass,
-		volume: 0,
-		density: 0,
-		temperature: temperature, // Kelvin
+		volume: volume,
+		density: density,
+		temperature: temperature,
 		pressure: 0,
-		radius: radius, // Meters
-		
+		pressureToGravityRatio: 0,
+		radius: radius,
 		jeansMass: 0,
-		isCollapsing: false,
+		isCriticalCollapse: false,
 		hasFusion: false,
-		
-		lifetime: 0,
-		
+		lifetime: 0
 	};
 
 	// Create star
@@ -132,7 +131,7 @@ function gameCreate() {
 	
 	addBtn.on('pointerdown', () => {
 
-		var amountToAdd = Math.random() * (.05 - .005 + .005) + .05;
+		var amountToAdd = Math.random() * (10e9 - 5e9 + 10e9) + 5e9;
 		
 		this.tweens.add({
 			targets: this.starState,
@@ -141,34 +140,10 @@ function gameCreate() {
 			ease: 'Linear'
 		})
 		
-		showInfo(this, `+${amountToAdd.toFixed(2)} Hydrogen`);
+		showInfo(this, `+${amountToAdd.toFixed(2)} K Hydrogen`);
 	});
 	
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
-
-	// Subtract hydrogen button
-	const subBtn = this.add.image(centerX - 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
-	
-	subBtn.on('pointerdown', () => {
-
-		var amountToRemove = Math.random() * (.05 - .005 + .005) + .05;
-		
-		if (this.starState.mass - amountToRemove <= 0) {
-			showWarning(this, "Unable to remove mass, your star is too small!");
-		}
-		else {
-			showWarning(this, `-${amountToRemove.toFixed(2)} Hydrogen`);
-			
-			this.tweens.add({
-				targets: this.starState,
-				mass: this.starState.mass - amountToRemove,
-				duration: 2000,
-				ease: 'Linear'
-			})
-		}
-	});
-	
-	this.add.text(subBtn.x - 60, subBtn.y - 10, '- Hydrogen', { fontSize: '18px', fill: '#ffffff' });
 }
 
 
