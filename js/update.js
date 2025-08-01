@@ -30,10 +30,12 @@ const MEAN_MOLECULAR_WEIGHT = 2.3 * 1.6605e-27; // Mean Molecular Weight (kg) fo
 const EXPANSION_FACTOR = 0.01; // How fast radius changes
 const GRAVITY_PRESSURE_BALANCE = 3.0; // Ideal pressure/gravity ratio
 const MASS_HYDROGEN_ATOM = 1.674e-27;
-const CLOUD_DENSITY_START = 0;
-const CLOUD_COLLAPSE_START = 0;
+
+const CLOUD_DENSITY_START = 1e4;
+const CLOUD_COLLAPSE_START = 1e4 + 1e4;
 
 
+var jeansMassLocked = false;
 var hasCalcJeans = false;
 var isCondensing = false;
 var isMolecularCloud = false;
@@ -53,39 +55,34 @@ function gameUpdate() {
     this.space_layer3.tilePositionX += 0.25;
 
 	// Calculate volume, denisty, gravitational force, and outward pressure
-	
-	if (star.phase == "Molecular Cloud" || star.phase != "Protostar") {
-		star.radius += .00001;
+	if (star.phase == "Molecular Cloud" || star.phase == "Hydrogen Atoms") {
+		star.radius += .0001;
 	}
 	else {
-		star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
-		star.pressureToGravityRatio = star.pressure / star.gravity;
 		star.radius *= .01 + EXPANSION_FACTOR * (star.pressureToGravityRatio - 1);
 	}
 	
-	/* Ask ChatGPT the following:
-		- The goal of this game is to start off with Hydrogen atoms in space, in which the player slowly 
-			introduces more to the area until enough are present to form a molecular cloud.  Once a molecular
-			cloud forms, I would like to be able to introduce things the player can do to affect the cloud.  For 
-			example, one of these is already here: adding Hydrogen.  What other things can we introduce for the 
-			player to utilize in building their dream star?
-		- Currently, as star.temperature and star.density increase, the star.jeansMass increases.  Because of this, 
-			star.mass will never be greater than star.jeansMass, thus the star will never achieve collapse.
-		- Given the formulae below for star.volume, star.density, star.temperature, and star.gravity, can we 
-			accurately calculate the mass of the star?  
-		- As star.radius increases, above (line 53), the cloud gets larger, and thus star.density drops.  How 
-			can we accurately and scientifically balance this?
-		- For adjusting star.phase, which should CLOUD_DENSITY_START and CLOUD_COLLAPSE_START be to change the
-			phase of the star for the player?			
-	*/
-	
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
-	star.mass += Math.random() * (10e3 - 5e3 + 10e3) + 5e3;
+	
+	if (star.phase == "Molecular Cloud" && star.isCriticalCollapse) {
+		star.mass *= 0.99;
+	}
+	else {
+		star.mass += Math.random() * (10e3 - 5e3 + 10e3) + 5e3;
+	}
+	
 	star.density = star.mass / star.volume;
 	star.temperature += 1e2 * (star.density / .5);
 	star.gravity = GRAVITATIONAL_CONSTANT * star.mass / (star.radius * star.radius); 
-	star.jeansMass = calculateJeansMass(star.temperature, star.density);
+		console.log("Gravity: ", star.gravity, "GRAVITATIONAL_CONSTANT: ", GRAVITATIONAL_CONSTANT, "Mass: ", star.mass, "Radius­^2", (star.radius * star.radius));
+	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (.5 * MEAN_MOLECULAR_WEIGHT);
+	star.pressureToGravityRatio = star.pressure / star.gravity;
 	star.lifetime += this.game.loop.delta * .0001;
+	
+	if (!jeansMassLocked) {
+		jeansMassLocked = true;
+		star.jeansMass = calculateJeansMass(star.temperature, star.density);
+	}
 	
 	if (star.phase == "Hydrogen Atoms") {
 		
@@ -104,44 +101,46 @@ function gameUpdate() {
 			star.status = "Stable";
 		}
 	}
-	else if (star.phase == "Molecular Cloud") {
+	else if (star.phase == "Molecular Cloud" && !star.isCriticalCollapse) {
 		
 		// Jeans Instability Check
-		if ((star.mass * (1.989 * 10^15)) > star.jeansMass && !star.status == "Collapsing") { 
-			
-			if (hasCalcJeans == false) {
-				hasCalcJeans = true;
-			}
-			
-			star.isCriticalCollapse = true;
-			clearTweens(this);
-			showInfo(this, "(Cloud begins to collapse drastically!");
+		if (star.mass > star.jeansMass) {
+		   // Trigger collapse
+		   star.status = "Collapsing";
+		   clearTweens(this);
+		   showInfo(this, "The cloud begins to collapse drastically!");
+		   star.isCriticalCollapse = true;
 		}
+	}
+	else if (star.phase == "Molecular Cloud" && star.isCriticalCollapse) {
+		// Decreasing radius, increase density
 		
-		/*
-		if (star.isCriticalCollapse) {
-			star.status = "Collapsing";
+		star.radius *= 0.99;
 
-			// Decreasing radius, increase density
-			star.radius *= 0.99; 
-			star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
-			star.density = star.mass / star.volume;
-
-			// Density at which radiative trapping becomes significant.
-			if (star.density > 1e-10) { 
-				
-				// Temperature increases with density, simulating heating and trapping.
-				star.temperature += 1e2 * (star.density / 1e-10); 
-			}
-
-			// Temperature threshold for protostar core
-			if (star.temperature > 1e6 && star.radius < 1e10 && !star.hasFusion) { 
-				star.hasFusion = true;
-				star.phase = "Protostar";
-				star.status = "Fusion";
-			}
+		// Temperature threshold for protostar core
+		if (star.temperature > 1e12 && star.radius < 1e8 && !star.hasFusion) { 
+			clearTweens(this);
+			showInfo(this, "The young protostar has fusion!");
+			isProtostar = true;
+			star.hasFusion = true;
+			star.phase = "Protostar";
+			star.status = "Fusion";
 		}
-		*/
+	}
+	else if (star.phase == "Protostar" && star.mass > 10 && star.mass < 50) {
+		
+		// console.log("Pressure: ", star.pressure, "Gravity: ", star.gravity, "Ratio: ", star.pressureToGravityRatio);
+		if (star.pressureToGravityRatio > 3) {
+			this.scene.pause();
+		}
+		else {
+			clearTweens(this);
+			showInfo(this, "The star has become a main sequence star!");
+			isMainSequence = true;
+			star.phase = "Main Sequence";
+			star.status = "Stable";
+			// this.scene.pause();
+		}
 	}
 	
 
@@ -200,7 +199,7 @@ function gameUpdate() {
 	// ***********************
 	// **** DISPLAY STATS ****
 	// ***********************
-	console.log("Mass: ", star.mass.toFixed(8), "Volume: ", star.volume.toFixed(4), "Density: ", star.density.toFixed(10), "Radius: ", star.radius.toFixed(4), "Temp: ", star.temperature, "Jeans: ", star.jeansMass);
+	// console.log("Mass: ", star.mass.toFixed(8), "Volume: ", star.volume.toFixed(4), "Density: ", star.density.toFixed(10), "Radius: ", star.radius.toFixed(4), "Temp: ", star.temperature, "Jeans: ", star.jeansMass);
 	
 	if (star.phase == "Protostar" || star.phase == "Main Sequence" || star.phase == "Red Giant" || star.phase == "Supernova") {
 			
@@ -213,11 +212,12 @@ function gameUpdate() {
 			`Mass: ${(star.mass / 150).toLocaleString()} M☉\n` +
 			`Density: ${star.density.toLocaleString()} kg/m³\n` +
 			`Radius: ${star.radius.toLocaleString()} R☉\n` +
-			`Volume: ${star.volume.toLocaleString()}\n` +
+			`Volume: ${star.volume.toExponential(2)}\n` +
 			`Temp: ${star.temperature.toLocaleString()} K\n\n` +
 			
-			`Gravity: ${star.gravity.toFixed(3)} m/s²\n` +
-			`Pressure: ${star.pressure.toFixed(3)} Pa\n\n` +
+			`GtP Ratio: ${star.pressureToGravityRatio.toLocaleString()} m/s²\n` +
+			`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
+			`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
 			
 			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
 		);
@@ -229,12 +229,15 @@ function gameUpdate() {
 			`Phase: ${star.phase}\n` +
 			`status: ${star.status}\n\n` +
 			`-----------------------\n` +
-			`Mass: ${(star.mass / 150).toLocaleString()} M☉\n` +
-			`Density: ${star.density.toExponential(2)} kg/m³\n` +
+			`Mass: ${star.mass.toLocaleString()} M☉\n` +
+			`Density: ${star.density.toLocaleString()} kg/m³\n` +
 			`Radius: ${star.radius.toLocaleString()} R☉\n` +
-			`Volume: ${star.volume.toLocaleString()}\n` +
-			`Temp: ${star.temperature.toLocaleString()} K\n` +
-			`JeansMass: ${star.jeansMass.toLocaleString()} M☉\n\n` +
+			`Volume: ${star.volume.toExponential(2)}\n` +
+			`Temp: ${star.temperature.toLocaleString()} K\n\n` +
+			
+			`GtP Ratio: ${star.pressureToGravityRatio.toLocaleString()} m/s²\n` +
+			`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
+			`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
 			
 			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
 		);
@@ -278,7 +281,7 @@ function calculateJeansMass(temperature, density) {
     const term2_power = Math.pow(term2, 0.5); // (1/2) power
 
     // Calculate Jeans Mass
-    const jeansMass = term1_power * term2_power;
+    const jeansMass = (term1_power * term2_power) / 1e64;
 	
 	return jeansMass;
 }

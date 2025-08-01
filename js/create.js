@@ -51,12 +51,14 @@ function gameCreate() {
 
 	// Generate some starting stats for the stellar gas
 	// var mass = .1;
-	var mass = Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
+	// var mass = 10e10; //Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
 	var temperature = .001;
-	var radius = 2.5;
+	// var radius = 2.5;
 	var volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
 	var density = radius * volume * 15;
-	
+	var mass = 10;  // Solar masses
+	var radius = 1e2; // Initial radius (in meters or relevant units)
+
 	// Star initial state
 	this.starState = {
 		phase: 'Hydrogen Atoms',
