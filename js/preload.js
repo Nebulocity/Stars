@@ -6,11 +6,13 @@ function gamePreload() {
     this.load.image('space_layer2', 'assets/space/space_layer2.png');
     this.load.image('space_layer3', 'assets/space/space_layer3.png');
 
+	// Hydrogen
+	this.load.image('hydrogen', 'assets/space/hydrogen.png');
+
 	// buttons
 	this.load.image('gasButton', 'assets/buttons/tealButton.png');
 	this.load.image('gravButton', 'assets/buttons/blueButton.png');
 	
-
     /* LOADING SCREEN */
 
     var progressBar = this.add.graphics();
