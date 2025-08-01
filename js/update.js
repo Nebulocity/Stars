@@ -55,7 +55,7 @@ function gameUpdate() {
     this.space_layer3.tilePositionX += 0.25;
 	
 	
-	if (star.phase == "Hydrogen Atoms" || star.phase == "Molecular Cloud") {
+	if (star.phase == "Hydrogen" || star.phase == "Molecular Cloud") {
 		star.radius += .0001;
 		star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
 		star.mass += Math.random() * (.01 - .0001) + .0001;
@@ -84,18 +84,22 @@ function gameUpdate() {
 		star.jeansMass = calculateJeansMass(star.temperature, star.density);
 	}
 		
-	if (star.phase == "Hydrogen Atoms") {
-		
+	if (star.phase == "Hydrogen") {
 		if (!isCondensing && star.density > CLOUD_DENSITY_START) {
-	
+			this.atomEmitter.emitting = true;
+			this.hydrogenCondensingEmitter.emitting = true;
 			
 			clearTweens(this);
-			showInfo(this, "The hydrogen atoms start to condense...");
+			showInfo(this, "The Hydrogen start to condense...");
 			star.status = "Condensing";
 			isCondensing = true;
 		}
 		
 		if (star.density > CLOUD_COLLAPSE_START && !isMolecularCloud) {
+			this.atomEmitter.emitting = true;
+			this.hydrogenCondensingEmitter.emitting = true;
+			this.cloudCondensingEmitter.emitting = true;
+			
 			clearTweens(this);
 			showInfo(this, "A molecular cloud of Hydrogen is born!");
 			isMolecularCloud = true;
@@ -107,6 +111,11 @@ function gameUpdate() {
 		
 		// Jeans Instability Check
 		if (star.mass > star.jeansMass) {
+			this.atomEmitter.emitting = true;
+			this.hydrogenCondensingEmitter.emitting = true;
+			this.cloudCondensingEmitter.emitting = true;
+			this.cloudCriticalCondensingEmitter.emitting = true;
+			
 		   // Trigger collapse
 		   star.status = "Collapsing";
 		   clearTweens(this);
@@ -121,7 +130,36 @@ function gameUpdate() {
 
 		// Temperature threshold for protostar core
 		if (star.temperature > 1e12 && star.radius < 1e8 && !star.hasFusion) { 
+		
+			this.atomEmitter.emitting = true;
+			this.hydrogenCondensingEmitter.emitting = true;
+			this.cloudCondensingEmitter.emitting = true;
+			this.cloudCriticalCondensingEmitter.emitting = true;
+			this.protoStarEmitterOuter.emitting = true;
+		
 			clearTweens(this);
+			
+			// Screen flash
+			this.flashRect.setAlpha(1);
+			this.tweens.add({
+				targets: this.flashRect,
+				alpha: 0,
+				duration: 500,
+				ease: 'Cubic.easeOut'
+			});
+			
+			// Solar flare
+			this.solarFlareEmitter = this.add.particles(this.protoStarEmitterOuter.x, this.protoStarEmitterOuter.y, 'hydrogen', {
+				speed: { min: 200, max: 400 },
+				lifespan: 600,
+				scale: { start: 0.015, end: 0 },
+				quantity: 100,
+				blendMode: 'ADD'
+			});
+						
+			// Screen shake
+			this.cameras.main.shake(500, 0.005);
+			
 			showInfo(this, "The young protostar has fusion!");
 			isProtostar = true;
 			star.hasFusion = true;
@@ -151,7 +189,7 @@ function gameUpdate() {
 	// **** DISPLAY STATS ****
 	// ***********************
 	// console.log("Mass: ", star.mass.toFixed(8), "Volume: ", star.volume.toFixed(4), "Density: ", star.density.toFixed(10), "Radius: ", star.radius.toFixed(4), "Temp: ", star.temperature, "Jeans: ", star.jeansMass);
-	
+	/*
 	if (star.phase == "Protostar" || star.phase == "Main Sequence" || star.phase == "Red Giant" || star.phase == "Supernova") {
 			
 		this.statusText.setText(
@@ -160,17 +198,12 @@ function gameUpdate() {
 			`Phase: ${star.phase}\n` +
 			`status: ${star.status}\n\n` +
 			`-----------------------\n` +
-			`jeansMass: ${star.jeansMass.toExponential(4)} M☉\n` +
 			`Mass: ${(star.mass).toLocaleString()} M☉\n` +
 			`Density: ${star.density.toExponential(4)} kg/m³\n` +
 			`Radius: ${star.radius.toLocaleString()} R☉\n` +
 			`Volume: ${star.volume.toExponential(2)}\n` +
 			`Temp: ${star.temperature.toLocaleString()} K\n\n` +
-			
-			`GtP Ratio: ${star.pressureToGravityRatio.toLocaleString()}\n` +
-			`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
-			`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
-			
+
 			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
 		);
 	}
@@ -181,20 +214,32 @@ function gameUpdate() {
 			`Phase: ${star.phase}\n` +
 			`status: ${star.status}\n\n` +
 			`-----------------------\n` +
-			`jeansMass: ${(star.jeansMass).toLocaleString()} M☉\n` +
 			`Mass: ${(star.mass).toExponential(4)} M☉\n` +
 			`Density: ${star.density.toExponential(4)} kg/m³\n` +
 			`Radius: ${star.radius.toLocaleString()} R☉\n` +
 			`Volume: ${star.volume.toExponential(2)}\n` +
 			`Temp: ${star.temperature.toLocaleString()} K\n\n` +
 			
-			`GtP Ratio: ${star.pressureToGravityRatio.toLocaleString()} \n` +
-			`Gravity: ${star.gravity.toLocaleString()} m/s²\n` +
-			`Pressure: ${star.pressure.toLocaleString()} Pa\n\n` +
-			
 			`Lifetime: ${star.lifetime.toFixed(2)} Yrs\n\n`
 		);
 	}
+	*/
+	
+	// Update status text headers
+	this.headerTexts.mass.setText(`Mass`);
+	this.headerTexts.density.setText(`Density`);
+	this.headerTexts.radius.setText(`Radius`);
+	this.headerTexts.temp.setText(`Temp`);
+	this.headerTexts.lifetime.setText(`Lifetime`);
+	this.headerTexts.phase.setText(`Phase`);
+	
+	// Update status text
+	this.statusTexts.mass.setText(`${star.mass.toExponential(2)} M☉`);
+	this.statusTexts.density.setText(`${star.density.toExponential(2)} kg/m³`);
+	this.statusTexts.radius.setText(`${star.radius.toExponential(2)} R☉`);
+	this.statusTexts.temp.setText(`${star.temperature.toExponential(2)} K`);
+	this.statusTexts.lifetime.setText(`${star.lifetime.toExponential(2)} Yrs`);
+	this.statusTexts.phase.setText(`${star.phase}`);
 }
 
 
