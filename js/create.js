@@ -56,7 +56,7 @@ function gameCreate() {
 	// var radius = 2.5;
 	var volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
 	var density = radius * volume * 15;
-	var mass = 10;  // Solar masses
+	var mass = Math.random() * (.01 - .0001) + .0001;
 	var radius = 1e2; // Initial radius (in meters or relevant units)
 
 	// Star initial state
@@ -76,37 +76,72 @@ function gameCreate() {
 		lifetime: 0
 	};
 
-	// Create star
-	this.star = this.add.circle(centerX, centerY, this.starState.radius, 0xffff00).setDepth(10);
-	this.star.visible = false;
-	console.log("A quaint collection of Hydrogen atoms exists in the universe...");
+	showInfo(this, "Hydrogen atoms are appearing in this area!");
 	
-	// const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-	// graphics.fillStyle(0xffffff, 1);
-	// graphics.fillCircle(4, 4, 4);
-	// graphics.generateTexture('gasParticle', 8, 8);
+	// Hydrogen atom emitter at start
+	this.atomRect = new Phaser.Geom.Rectangle(0, 0, 800, 450); 
+	this.atomEmitter = this.add.particles(0, 0, 'hydrogen', {
+		emitZone: { source: this.atomRect, type: 'random' }, 
+		scale: { start: 0.0025, end: 0 },
+		emitting: false
+	});
+	
+	// Hydrogen atoms condensing
+	this.atomCircle = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 4)); 
+	this.atomCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
+		emitZone: { source: this.atomCircle }, 
+		moveToX: centerX, // Particles will move towards this X coordinate
+		moveToY: centerY, // Particles will move towards this Y coordinate
+		lifespan: 5000,
+		speed: { min: 2, max: 10 },
+		scale: { start: 0.0025, end: 0 },
+		gravityY: 0,
+		blendMode: 'ADD',
+		emitting: false
+	});
+	
+	// Molecular cloud emitter
+	this.cloud = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 8));
+	this.cloudEmitter = this.add.particles(0, 0, 'hydrogen', { 
+		emitZone: { source: this.cloud }, 
+		moveToX: centerX, // Particles will move towards this X coordinate
+		moveToY: centerY, // Particles will move towards this Y coordinate
+		lifespan: 4000,
+		speed: { min: 200, max: 400 },
+		scale: { start: 0.0025, end: 0 },
+		gravityY: 0,
+		blendMode: 'ADD',
+		emitting: false
+	});
 
-	// this.gasParticles = this.add.particles('gasParticle', {
-		// emitters: {
-			// x: centerX,
-			// y: centerY,
-			// angle: { min: 0, max: 360 },
-			// speed: { min: 10, max: 60 },
-			// lifespan: { min: 2000, max: 4000 },
-			// quantity: 25,
-			// frequency: 150,
-			// scale: { start: 1.2, end: 0 },
-			// alpha: { start: 0.4, end: 0 },
-			// tint: [0xffcc66, 0xff9966, 0xffff99],
-			// blendMode: 'ADD'
-		// }
+	// Protostar emitters
+	// this.star = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 2));
+	// this.protoCore = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 8));
+	// this.protoStarEmitterCore = this.add.particles(0, 0, 'hydrogen', { 
+		// emitZone: { source: this.protoCore }, 
+		// moveToX: centerX, // Particles will move towards this X coordinate
+		// moveToY: centerY, // Particles will move towards this Y coordinate
+		// lifespan: 300,
+		// speed: { min: 50, max: 100 },
+		// scale: { start: 0.0025, end: 0 },
+		// quantity: 150,
+		// gravityY: 0,
+		// blendMode: 'ADD',
+		// emitting: true
 	// });
 
-	// this.gasEmitter = this.gasParticles.emitters.list[0];
-
-	// star.gasEmitter = this.gasEmitter;
-	// star.gasParticles = this.gasParticles;
-
+	this.protoStarEmitterOuter = this.add.particles(centerX, centerY, 'hydrogen', { 
+		lifespan: 600,
+		speed: { min: 50, max: 100 },
+		scale: { start: 0.0025, end: 0 },
+		radius: 50,
+		quantity: 100,
+		gravityY: 0,
+		blendMode: 'ADD',
+		emitting: true
+	});
+	
+	
 	
 	
 	
@@ -133,7 +168,8 @@ function gameCreate() {
 	
 	addBtn.on('pointerdown', () => {
 
-		var amountToAdd = Math.random() * (10e9 - 5e9 + 10e9) + 5e9;
+		// var amountToAdd = Math.random() * (10e9 - 5e9 + 10e9) + 5e9;
+		var amountToAdd = Math.random() * (1 - .01) + .01;
 		
 		this.tweens.add({
 			targets: this.starState,
