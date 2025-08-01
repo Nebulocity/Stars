@@ -13,6 +13,14 @@ function gamePreload() {
 	this.load.image('gasButton', 'assets/buttons/tealButton.png');
 	this.load.image('gravButton', 'assets/buttons/blueButton.png');
 	
+	// Icons
+	this.load.image('iconMass', 'assets/icons/iconMass.png');
+	this.load.image('iconDensity', 'assets/icons/iconDensity.png');
+	this.load.image('iconRadius', 'assets/icons/iconRadius.png');
+	this.load.image('iconTemp', 'assets/icons/iconTemp.png');
+	this.load.image('iconLifetime', 'assets/icons/iconLifetime.png');
+	this.load.image('iconPhase', 'assets/icons/iconPhase.png');
+	
     /* LOADING SCREEN */
 
     var progressBar = this.add.graphics();
