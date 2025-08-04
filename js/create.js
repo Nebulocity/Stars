@@ -50,19 +50,16 @@ function gameCreate() {
 	const MAX_VAL = 1e3;
 
 	// Generate some starting stats for the stellar gas
-	// var mass = .1;
-	// var mass = 10e10; //Math.random() * (2 * 1.989e27) + 0.1 * 1.989e27;
-	var temperature = .001;
-	// var radius = 2.5;
+	var mass = .025;
+	var temperature = 100;
+	var radius = 10; 
 	var volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
-	var density = radius * volume * 15;
-	var mass = Math.random() * (.01 - .0001) + .0001;
-	var radius = 1e2; // Initial radius (in meters or relevant units)
+	var density = mass / volume;	
 
 	// Star initial state
 	this.starState = {
-		phase: 'Hydrogen',
-		status: 'Stable',
+		phase: 'Empty Space',
+		status: '',
 		mass: mass,
 		volume: volume,
 		density: density,
@@ -79,7 +76,7 @@ function gameCreate() {
 	showInfo(this, "Hydrogen is appearing in this area!");
 	
 	// Hydrogen atom emitter at start
-	this.atoms = new Phaser.Geom.Rectangle(0, 0, 800, 450); 
+	this.atoms = new Phaser.Geom.Rectangle(0, 0, 1280, 720); 
 	this.atomEmitter = this.add.particles(0, 0, 'hydrogen', {
 		emitZone: { source: this.atoms, type: 'random' }, 
 		scale: { start: 0.0025, end: 0 },
@@ -87,7 +84,7 @@ function gameCreate() {
 	});
 	
 	// Hydrogen condensing
-	this.hydrogenCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 2)); 
+	this.hydrogenCondensing = new Phaser.Geom.Circle(centerX, centerY, (centerX + centerY)); 
 	this.hydrogenCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
 		emitZone: { source: this.hydrogenCondensing }, 
 		moveToX: centerX, // Particles will move towards this X coordinate
@@ -101,7 +98,7 @@ function gameCreate() {
 	});
 	
 	// Hydrogen critical collapse
-	this.cloudCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 4)); 
+	this.cloudCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 2)); 
 	this.cloudCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
 		emitZone: { source: this.cloudCondensing }, 
 		moveToX: centerX, // Particles will move towards this X coordinate
@@ -115,44 +112,9 @@ function gameCreate() {
 	});
 	
 	// Molecular cloud emitter
-	this.cloudCriticalCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 4));
+	this.cloudCriticalCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 3));
 	this.cloudCriticalCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
-		emitZone: { source: this.cloudCriticalCondensing }, 
-		moveToX: centerX, // Particles will move towards this X coordinate
-		moveToY: centerY, // Particles will move towards this Y coordinate
-		lifespan: 4000,
-		speed: { min: 100, max: 800 },
-		scale: { start: 0.0025, end: 0 },
-		gravityY: 0,
-		blendMode: 'ADD',
-		emitting: false
-	});
-
-	// Creates a dramatic effect to indicate the birth of the protostar
-	this.flashRect = this.add.rectangle(0, 0, 800, 450, 0xffffff)
-		.setOrigin(0, 0)
-		.setAlpha(0)
-		.setDepth(10);
-
-
-
-	// Protostar emitters
-	// this.star = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 2));
-	// this.protoCore = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 8));
-	// this.protoStarEmitterCore = this.add.particles(0, 0, 'hydrogen', { 
-		// emitZone: { source: this.protoCore }, 
-		// moveToX: centerX, // Particles will move towards this X coordinate
-		// moveToY: centerY, // Particles will move towards this Y coordinate
-		// lifespan: 300,
-		// speed: { min: 50, max: 100 },
-		// scale: { start: 0.0025, end: 0 },
-		// quantity: 150,
-		// gravityY: 0,
-		// blendMode: 'ADD',
-		// emitting: true
-	// });
-
-	this.protoStarEmitterOuter = this.add.particles(centerX, centerY, 'hydrogen', { 
+		emitZone: { source: this.cloudCriticalCondensing },
 		lifespan: 600,
 		speed: { min: 50, max: 100 },
 		scale: { start: 0.0025, end: 0 },
@@ -161,36 +123,65 @@ function gameCreate() {
 		blendMode: 'ADD',
 		emitting: false
 	});
-	
-	
-	
-	
-	
 
-	// Pulse animation
-	this.tweens.add({
-		targets: this.star,
-		scaleX: 0.95,
-		scaleY: 0.95,
-		yoyo: true,
-		repeat: -1,
-		ease: 'Sine.easeInOut',
-		duration: 1500
+	// Creates a dramatic effect to indicate the birth of the protostar
+	this.flashRect = this.add.rectangle(0, 0, 1280, 720, 0xffffff)
+		.setOrigin(0, 0)
+		.setAlpha(0)
+		.setDepth(10);
+
+
+
+	// Protostar emitters
+	this.protoStarCore = new Phaser.Geom.Circle(centerX, centerY, 10);
+	this.protoStarEmitterCore = this.add.particles(0, 0, 'hydrogen', { 
+		emitZone: { source: this.protoStarCore }, 
+		moveToX: centerX, // Particles will move towards this X coordinate
+		moveToY: centerY, // Particles will move towards this Y coordinate
+		lifespan: 300,
+		speed: { min: 50, max: 100 },
+		scale: { start: 0.0025, end: 0 },
+		quantity: 150,
+		gravityY: 0,
+		blendMode: 'ADD',
+		emitting: false
+	});
+	
+	this.protoStarOuter = new Phaser.Geom.Circle(centerX, centerY, 5);
+	this.protoStarEmitterOuter = this.add.particles(0, 0, 'hydrogen', { 
+		emitZone: { source: this.protoStarOuter },
+		lifespan: 300,
+		speed: { min: 50, max: 100 },
+		scale: { start: 0.0025, end: 0 },
+		quantity: 10,
+		gravityY: 0,
+		blendMode: 'ADD',
+		emitting: false
 	});
 
-
-
+	// Solar flare
+	// this.solarFlare = new Phaser.Geom.Circle(centerX/2, centerY/2, 200);
+	// this.solarFlareEmitter = this.add.particles(centerX, centerY, 'hydrogen', {
+		// speed: { min: 200, max: 400 },
+		// lifespan: 600,
+		// scale: { start: 0.0025, end: 0 },
+		// quantity: 100,
+		// blendMode: 'ADD'
+	// });
+			
+			
 	// *****************
 	// **** BUTTONS ****
 	// *****************
 	
 	// Add hydrogen button
-	const addBtn = this.add.image(centerX + 300, centerY + 175, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const addBtn = this.add.image(centerX + 500, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	addBtn.on('pointerdown', () => {
 
 		// var amountToAdd = Math.random() * (10e9 - 5e9 + 10e9) + 5e9;
-		var amountToAdd = Math.random() * (1e5 - .01) + .01;
+		// var amountToAdd = Math.random() * (1e2 - .01) + .01;
+		var amountToAdd = 100;
 		
 		this.tweens.add({
 			targets: this.starState,
@@ -207,7 +198,7 @@ function gameCreate() {
 	
 	
 	// Status bar background
-	this.statusBar = this.add.rectangle(0, 0, 900, 65, 0x000000, 0.6).setOrigin(0, 0).setDepth(100);
+	this.statusBar = this.add.rectangle(0, 0, 1280, 65, 0x000000, 0.6).setOrigin(0, 0).setDepth(100);
 	
 	// Icon spacing and sizeToContent
 	const iconSize = 24;
@@ -234,20 +225,24 @@ function gameCreate() {
 	this.headerTexts = {
 		lifetime: this.add.text(paddingX + 30, textY, 'Lifetime', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		mass: this.add.text(paddingX + spacingX + 30, textY, 'Mass', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		density: this.add.text(paddingX + spacingX * 2 + 60, textY, 'Density', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		radius: this.add.text(paddingX + spacingX * 3 + 85, textY, 'Radius', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		temp: this.add.text(paddingX + spacingX * 4 + 85, textY, 'Temp', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		phase: this.add.text(paddingX + spacingX * 5 + 85, textY, 'Phase', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
+		volume: this.add.text(paddingX + spacingX * 2 + 60, textY, 'Density', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		density: this.add.text(paddingX + spacingX * 3 + 60, textY, 'Density', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		radius: this.add.text(paddingX + spacingX * 4 + 85, textY, 'Radius', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		temp: this.add.text(paddingX + spacingX * 5 + 85, textY, 'Temp', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		phase: this.add.text(paddingX + spacingX * 6 + 85, textY, 'Phase', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		status: this.add.text(paddingX + spacingX * 7 + 150, textY, 'Status', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
 	};
 	
 	// Text labels next to icons
 	this.statusTexts = {
 		lifetime: this.add.text(paddingX + 30, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		mass: this.add.text(paddingX + spacingX + 30, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		density: this.add.text(paddingX + spacingX * 2 + 60, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		radius: this.add.text(paddingX + spacingX * 3 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		temp: this.add.text(paddingX + spacingX * 4 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		phase: this.add.text(paddingX + spacingX * 5 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
+		volume: this.add.text(paddingX + spacingX * 2 + 60, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		density: this.add.text(paddingX + spacingX * 3 + 60, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		radius: this.add.text(paddingX + spacingX * 4 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		temp: this.add.text(paddingX + spacingX * 5 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		phase: this.add.text(paddingX + spacingX * 6 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		status: this.add.text(paddingX + spacingX * 7 + 150, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
 	};
 }
 
