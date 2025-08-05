@@ -13,37 +13,24 @@ function gameCreate() {
 		const layer = this.make.graphics({ x: 0, y: 0, add: false });
 		layer.generateTexture(`space_layer${i}`, 0, 0);
 		this[`space_layer${i}`] = this.add.tileSprite(0, 0, 1280, 720, `space_layer${i}`).setScale(1);
-		this[`space_layer${i}`].setOrigin(0, 0); // Optional: ensures the sprite is aligned to the top-left corner
+		this[`space_layer${i}`].setOrigin(0, 0); 
 		this[`space_layer${i}`].depth = -99 + i;
 	}
 
+	// Top/bottom bar backgrounds
+	this.statusBar = this.add.rectangle(0, 0, 1280, 65, 0x000000, 0.6).setOrigin(0, 0).setDepth(1);
+	this.notificationBar = this.add.rectangle(0, 655, 1280, 65, 0x000000, 0.6).setOrigin(0, 0).setDepth(1);
+	
 	// Status text
 	this.statusText = this.add.text(20, 20, '', { fontSize: '16px', fill: '#fff' });
-
-	// Warning text
-	this.infoText = this.add.text(centerX, centerY/2 + (centerY/2)+100, '', {
-		fontSize: '24px',
-		color: '#00ffff', 
-		fontStyle: 'bold',
-		padding: {x:10, y:6 }
-	}).setOrigin(0.5).setAlpha(0);
 	
-	// Warning text
-	this.warningText = this.add.text(centerX, centerY/2 + (centerY/2)+100, '', {
+	// Notifications bar
+	this.notificationText = this.add.text(centerX, 683.5, '', {
 		fontSize: '24px',
-		color: '#ff0000', 
+		color: '#00ffff',
 		fontStyle: 'bold',
 		padding: {x:10, y:6 }
-	}).setOrigin(0.5).setAlpha(0);
-			
-	// Game over text
-	this.gameOverText = this.add.text(centerX, centerY, '', {
-		fontSize: '24px',
-		fontStyle: 'bold',
-		fill: '#ff6666',
-		align: 'center',
-		wordWrap: { width: 400 }
-	}).setOrigin(0.5).setVisible(false).setDepth(11);
+	});
 
 	// Used to max out or clamp values so they're not indecipherable
 	const MIN_VAL = 1;
@@ -51,8 +38,8 @@ function gameCreate() {
 
 	// Generate some starting stats for the stellar gas
 	var mass = .025;
-	var temperature = 100;
-	var radius = 10; 
+	var temperature = Math.random() * (3 - 1) + 1;
+	var radius = 15; 
 	var volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
 	var density = mass / volume;	
 
@@ -98,7 +85,7 @@ function gameCreate() {
 	});
 	
 	// Hydrogen critical collapse
-	this.cloudCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 2)); 
+	this.cloudCondensing = new Phaser.Geom.Circle(centerX, centerY, (((centerX + centerY) / 2) - 130)); 
 	this.cloudCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
 		emitZone: { source: this.cloudCondensing }, 
 		moveToX: centerX, // Particles will move towards this X coordinate
@@ -112,7 +99,7 @@ function gameCreate() {
 	});
 	
 	// Molecular cloud emitter
-	this.cloudCriticalCondensing = new Phaser.Geom.Circle(centerX, centerY, ((centerX + centerY) / 3));
+	this.cloudCriticalCondensing = new Phaser.Geom.Circle(centerX, centerY, (((centerX + centerY) / 3) - 130));
 	this.cloudCriticalCondensingEmitter = this.add.particles(0, 0, 'hydrogen', { 
 		emitZone: { source: this.cloudCriticalCondensing },
 		lifespan: 600,
@@ -133,55 +120,43 @@ function gameCreate() {
 
 
 	// Protostar emitters
-	this.protoStarCore = new Phaser.Geom.Circle(centerX, centerY, 10);
+	this.protoStarCore = new Phaser.Geom.Circle(centerX, centerY, 5);
 	this.protoStarEmitterCore = this.add.particles(0, 0, 'hydrogen', { 
-		emitZone: { source: this.protoStarCore }, 
-		moveToX: centerX, // Particles will move towards this X coordinate
-		moveToY: centerY, // Particles will move towards this Y coordinate
+		emitZone: { source: this.protoStarCore },
 		lifespan: 300,
 		speed: { min: 50, max: 100 },
 		scale: { start: 0.0025, end: 0 },
-		quantity: 150,
+		quantity: 100,
 		gravityY: 0,
 		blendMode: 'ADD',
 		emitting: false
 	});
+	
 	
 	this.protoStarOuter = new Phaser.Geom.Circle(centerX, centerY, 5);
 	this.protoStarEmitterOuter = this.add.particles(0, 0, 'hydrogen', { 
 		emitZone: { source: this.protoStarOuter },
 		lifespan: 300,
-		speed: { min: 50, max: 100 },
+		speed: { min: 50, max: 75 },
 		scale: { start: 0.0025, end: 0 },
-		quantity: 10,
+		quantity: 100,
 		gravityY: 0,
 		blendMode: 'ADD',
 		emitting: false
 	});
-
-	// Solar flare
-	// this.solarFlare = new Phaser.Geom.Circle(centerX/2, centerY/2, 200);
-	// this.solarFlareEmitter = this.add.particles(centerX, centerY, 'hydrogen', {
-		// speed: { min: 200, max: 400 },
-		// lifespan: 600,
-		// scale: { start: 0.0025, end: 0 },
-		// quantity: 100,
-		// blendMode: 'ADD'
-	// });
-			
-			
+	
 	// *****************
 	// **** BUTTONS ****
 	// *****************
 	
 	// Add hydrogen button
-	const addBtn = this.add.image(centerX + 500, centerY + 300, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
+	const addBtn = this.add.image(centerX + 500, centerY + 250, 'gasButton').setScale(.1).setInteractive({ useHandCursor: true });
 	
 	addBtn.on('pointerdown', () => {
 
 		// var amountToAdd = Math.random() * (10e9 - 5e9 + 10e9) + 5e9;
 		// var amountToAdd = Math.random() * (1e2 - .01) + .01;
-		var amountToAdd = 100;
+		var amountToAdd = 1e3;
 		
 		this.tweens.add({
 			targets: this.starState,
@@ -192,13 +167,7 @@ function gameCreate() {
 		
 		showInfo(this, `+${amountToAdd.toFixed(2)} K Hydrogen`);
 	});
-	
 	this.add.text(addBtn.x - 60, addBtn.y - 10, '+ Hydrogen', { fontSize: '18px', fill: '#ffffff' });
-	
-	
-	
-	// Status bar background
-	this.statusBar = this.add.rectangle(0, 0, 1280, 65, 0x000000, 0.6).setOrigin(0, 0).setDepth(100);
 	
 	// Icon spacing and sizeToContent
 	const iconSize = 24;
@@ -229,8 +198,8 @@ function gameCreate() {
 		density: this.add.text(paddingX + spacingX * 3 + 60, textY, 'Density', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		radius: this.add.text(paddingX + spacingX * 4 + 85, textY, 'Radius', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		temp: this.add.text(paddingX + spacingX * 5 + 85, textY, 'Temp', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		phase: this.add.text(paddingX + spacingX * 6 + 85, textY, 'Phase', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		status: this.add.text(paddingX + spacingX * 7 + 150, textY, 'Status', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
+		phase: this.add.text(paddingX + spacingX * 6 + 100, textY, 'Phase', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		status: this.add.text(paddingX + spacingX * 7 + 200, textY, 'Status', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
 	};
 	
 	// Text labels next to icons
@@ -241,25 +210,20 @@ function gameCreate() {
 		density: this.add.text(paddingX + spacingX * 3 + 60, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		radius: this.add.text(paddingX + spacingX * 4 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
 		temp: this.add.text(paddingX + spacingX * 5 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		phase: this.add.text(paddingX + spacingX * 6 + 85, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
-		status: this.add.text(paddingX + spacingX * 7 + 150, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
+		phase: this.add.text(paddingX + spacingX * 6 + 100, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101),
+		status: this.add.text(paddingX + spacingX * 7 + 200, iconY, '', {fontSize:'14px', color:'#FFFFFF'}).setOrigin(0, 0.5).setDepth(101)
 	};
 }
 
 
 function showInfo(scene, message) {
-	scene.tweens.killTweensOf(scene.infoText);
-	scene.infoText.setText("");
-	
-	scene.tweens.killTweensOf(scene.warningText);
-	scene.warningText.setText("");
-	
-	scene.infoText.setText(message);
-	
-	scene.infoText.setAlpha(1);
+	scene.tweens.killTweensOf(scene.notificationText);
+	scene.notificationText.setText("");
+	scene.notificationText.setText(message);
+	scene.notificationText.setAlpha(1);
 	
 	scene.tweens.add({
-		targets: scene.infoText,
+		targets: scene.notificationText,
 		alpha: 0,
 		duration: 3000,
 		ease: 'Sine.easeOut'
@@ -269,12 +233,7 @@ function showInfo(scene, message) {
 function showWarning(scene, message) {
 	scene.tweens.killTweensOf(scene.infoText);
 	scene.infoText.setText("");
-	
-	scene.tweens.killTweensOf(scene.warningText);
-	scene.warningText.setText("");
-	
 	scene.warningText.setText(message);
-	
 	scene.warningText.setAlpha(1);
 	
 	scene.tweens.add({
