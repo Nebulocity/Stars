@@ -50,18 +50,28 @@ function gameUpdate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
     const star = this.starState;
-	
+
 	// Background parallax effect
     this.space_layer1.tilePositionX += 0.05;
     this.space_layer2.tilePositionX += 0.15;
     this.space_layer3.tilePositionX += 0.25;
-				
-	if (star.phase == "Hydrogen" || star.phase == "Molecular Cloud") {
-		star.radius += .0001;
+			
+
+	/****************************
+	***** UPDATE STAR STATS *****
+	*****************************/
+
+	// Adjust radius of star
+	if (star.hasFusion) {
+		// Check grav vs pressure here to determine radius increase or not
+		var radius = star.radius >= 300 ? 300 : star.radius; 
+		console.log("Updating emitter radius: ", radius);
+		this.protoStarCore.radius = radius;
+		this.protoStarEmitterCore.quantity = radius * 2.5;
+		
+		this.protoStarOuter.radius = radius;
+		this.protoStarEmitterOuter.quantity = radius * 2.5;
 	}
-	
-	
-	console.log(star.mass, star.density);
 	
 	star.volume = (4 / 3) * Math.PI * Math.pow(star.radius, 3);
 	star.density = star.mass / star.volume;
@@ -70,48 +80,38 @@ function gameUpdate() {
 	star.pressure = (star.density * BOLTZMANN_CONSTANT * star.temperature) / (0.5 * MEAN_MOLECULAR_WEIGHT);
 	star.pressureToGravityRatio = star.pressure / star.gravity;
 	star.lifetime += this.game.loop.delta * .0001;
-	
-	if (star.pressureToGravityRatio > 1000) {
-		star.radius += EXPANSION_FACTOR * 0.1; // Slow down expansion
-	}
-		
+
 	if (!jeansMassLocked) {
 		jeansMassLocked = true;
-		star.jeansMass = (calculateJeansMass(star.temperature, star.density) / 2);
-		showInfo(this, "Jeans Mass: " + star.jeansMass);
+		star.jeansMass = (calculateJeansMass((star.temperature * 10), star.density) / 2);
+		notificationText(this, "Jeans Mass: " + star.jeansMass);
 	}
 		
 		
 	/******************************
 	***** 	HYDROGEN IN SPACE *****
 	******************************/
-	if (star.phase == "Empty Space") {
-		star.mass += .001;
+	if (star.phase == "Empty Space" && !isCondensing && star.density > CLOUD_DENSITY_START) {
+		this.atomEmitter.emitting = true;
+		this.hydrogenCondensingEmitter.emitting = true;
 		
-		if (!isCondensing && star.density > CLOUD_DENSITY_START) {
-			this.atomEmitter.emitting = true;
-			this.hydrogenCondensingEmitter.emitting = true;
-			
-			clearTweens(this);
-			showInfo(this, "Hydrogen atoms start to coalesce...");
-			star.phase = "Hydrogen Atoms";
-			star.status = "Coalescing";
-			isCondensing = true;
-		}
+		clearTweens(this);
+		notificationText(this, "Hydrogen atoms start to coalesce...");
+		star.phase = "Hydrogen Atoms";
+		star.status = "Coalescing";
+		isCondensing = true;
 	}
 	/********************************
 	***** 	MOLECULAR HYDROGEN  *****
 	********************************/
 	else if (star.phase == "Hydrogen Atoms" && star.density > CLOUD_COLLAPSE_START && !isMolecularCloud) {
-		star.mass += .01;
-		
 		this.atomEmitter.emitting = true;
 		this.hydrogenCondensingEmitter.emitting = true;
 		this.cloudCondensingEmitter.emitting = true;
 		this.cloudCriticalCondensingEmitter.emitting = true;
 		
 		clearTweens(this);
-		showInfo(this, "A cloud of molecular hydrogen forms!");
+		notificationText(this, "A cloud of molecular hydrogen forms!");
 		isMolecularCloud = true;
 		star.phase = "Molecular Hydrogen";
 		star.status = "Stable";
@@ -120,9 +120,6 @@ function gameUpdate() {
 	***** 	MOLECULAR COLLAPSE  *****
 	********************************/
 	else if (star.phase == "Molecular Hydrogen" && !star.isCriticalCollapse) {
-		
-		star.mass += .015;
-
 		this.atomEmitter.emitting = true;
 		this.hydrogenCondensingEmitter.emitting = true;
 		this.cloudCondensingEmitter.emitting = true;
@@ -132,15 +129,13 @@ function gameUpdate() {
 	   star.phase = "Molecular Hydrogen";
 	   star.status = "Collapsing";
 	   clearTweens(this);
-	   showInfo(this, "The cloud begins to collapse on itself!");
+	   notificationText(this, "The cloud begins to collapse on itself!");
 	   star.isCriticalCollapse = true;
 	}
 	/********************************
 	***** 	PROTOSTAR FORMATION  ****
 	********************************/
 	else if (star.phase == "Molecular Hydrogen" && star.isCriticalCollapse && !star.hasFusion && star.mass > star.jeansMass) {
-		
-		star.mass += .02;
 		
 		// Temperature threshold for protostar core
 		if ((star.temperature >= 1e4 && star.temperature <= 1e80) && (star.radius >= .05 && star.radius <= 2) && !star.hasFusion) { 
@@ -150,7 +145,7 @@ function gameUpdate() {
 			this.cloudCondensingEmitter.emitting = false;
 			this.cloudCriticalCondensingEmitter.emitting = false;
 			this.protoStarEmitterCore.emitting = true;
-			this.protoStarEmitterOuter.emitting = true;
+			// this.protoStarEmitterOuter.emitting = true;
 		
 			clearTweens(this);
 			
@@ -166,7 +161,7 @@ function gameUpdate() {
 			// Screen shake
 			this.cameras.main.shake(500, 0.005);
 						
-			showInfo(this, "A young protostar was born!");
+			notificationText(this, "A young protostar is born!");
 			isProtostar = true;
 			star.hasFusion = true;
 			star.phase = "Protostar";
@@ -185,21 +180,28 @@ function gameUpdate() {
 	***** 	MAIN SEQUENCE STAR  ****
 	********************************/
 	else if (star.phase == "Protostar" && star.hasFusion && (star.mass/1e3) >= 5 && (star.mass/1e3) <= 50) {
-		
-		star.mass += .001;
-		
-		this.protoStarEmitterCore.radius = star.radius;
-		this.protoStarEmitterOuter.radius = star.radius;
+		// Screen flash
+		this.flashRect.setAlpha(1);
+		this.tweens.add({
+			targets: this.flashRect,
+			alpha: 0,
+			duration: 3000,
+			ease: 'Cubic.easeOut'
+		});
+			
+		// Screen shake
+		this.cameras.main.shake(500, 0.005);
 		
 		clearTweens(this);
-		showInfo(this, "The protostar has become a main sequence star!");
+		notificationText(this, "The protostar has become a main sequence star!");
 		isMainSequence = true;
 		star.phase = "Main Sequence";
 		star.status = "Stable";
 	}
 	else {
-		// Just hydrogen gas in space, treat mass normally
+		// Stable star
 		star.mass += .001;
+		star.radius += .1;
 	}
 
 	// Check the pressure-to-gravity ratio and update star's radius accordingly
@@ -248,21 +250,6 @@ function gameUpdate() {
 // **** GAME FUNCTIONS ****
 // ************************
 
-function calculatePressure(temperature) {
-	// Estimate the outward pressure based on temperature
-	return (Math.pow(temperature, 4) * .5);
-}
-
-function calculateGravitationalForce(mass, radius) {
-	// Estimate the gravitational force (F_gravity = GM^2/R^2)
-	return (GRAVITATIONAL_CONSTANT * Math.pow(mass, 2) * mass) / Math.pow(radius, 2);
-}
-
-function calculateStellarstatus(pressure, gravitationalForce) {
-	let status = pressure > gravitationalForce ? "Expanding" : "Collapsing";
-	return status;
-}
-
 // Jeans Mass calculation: M_J = ( (5 * kB * T) / (G * μ * m_H) )^(3/2) * (3 / (4 * π * ρ) )^(1/2)
 function calculateJeansMass(temperature, density) {
 	// var term1 = (5 * BOLTZMANN_CONSTANT * temperature) / (GRAVITATIONAL_CONSTANT * MEAN_MOLECULAR_WEIGHT * MASS_HYDROGEN_ATOM);
@@ -287,61 +274,37 @@ function calculateJeansMass(temperature, density) {
 
 function calculateStellarExpansion(initialRadius, initialMass, initialDensity,  initialTemperature) {
 
-  // Calculate the initial pressure based on a simplified hydrostatic equilibrium model
-  // This is a rough approximation assuming constant density and a simplified GRAVITATIONAL_CONSTANT.
-  const initialPressure = (GRAVITATIONAL_CONSTANT * initialMass * initialDensity) / (4 * Math.PI * initialRadius);
+	// Calculate the initial pressure based on a simplified hydrostatic equilibrium model
+	// This is a rough approximation assuming constant density and a simplified GRAVITATIONAL_CONSTANT.
+	const initialPressure = (GRAVITATIONAL_CONSTANT * initialMass * initialDensity) / (4 * Math.PI * initialRadius);
 
-  // Simplified relationship: If pressure increases, the star expands (radius increases)
-  // If pressure decreases, the star contracts (radius decreases)
-  // The extent of the change depends on the magnitude of the pressure change and other factors.
-  const newRadius = initialRadius * (1 + (initialTemperature / initialPressure));
+	// Simplified relationship: If pressure increases, the star expands (radius increases)
+	// If pressure decreases, the star contracts (radius decreases)
+	// The extent of the change depends on the magnitude of the pressure change and other factors.
+	const newRadius = initialRadius * (1 + (initialTemperature / initialPressure));
 
-  // console.log("Initial radius:", initialRadius, "m");
-  // console.log("Initial density:", initialDensity, "kg/m^3");
-  // console.log("Initial pressure:", initialPressure, "Pa");
-  // console.log("Change in pressure:", initialTemperature, "Pa");
-  // console.log("New radius (expanded/contracted):", newRadius, "m");
-
-  return newRadius;
-
+	return newRadius;
 }
 
 function clearTweens(scene) {
-	scene.tweens.killTweensOf(scene.infoText);
-	scene.infoText.setText("");
-	
-	scene.tweens.killTweensOf(scene.warningText);
-	scene.warningText.setText("");
+	scene.tweens.killTweensOf(scene.notificationText);
+	scene.notificationText.setText("");
 }
 
-function showInfo(scene, message) {
-	scene.infoText.setText(message);
-	scene.infoText.setAlpha(1);
+function notificationText(scene, message) {
+	scene.notificationText.setText(message);
+	scene.notificationText.setAlpha(1);
+	scene.notificationText.setDepth(1);
+	scene.notificationText.setOrigin(0.5);
+	console.log(message);
 	
 	scene.tweens.add({
-		targets: scene.infoText,
+		targets: scene.notificationText,
 		alpha: 0,
-		duration: 2000,
+		duration: 3000,
 		ease: 'Sine.easeOut'
 	});
 };
 
-function showWarning(scene, message) {
-	scene.warningText.setText(message);
-	scene.warningText.setAlpha(1);
-	
-	scene.tweens.add({
-		targets: scene.warningText,
-		alpha: 0,
-		duration: 2000,
-		ease: 'Sine.easeOut'
-	});
-};
-
-function showGameOver(message) {
-	this.gameOverText.setText(message);
-	this.gameOverText.setVisible(true);
-	this.scene.pause();
-}
 	
 export default gameUpdate;
