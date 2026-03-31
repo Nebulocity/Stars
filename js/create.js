@@ -1,3 +1,5 @@
+const Phaser = window.Phaser; // Phaser is loaded via <script> in index.html
+
 function gameCreate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
