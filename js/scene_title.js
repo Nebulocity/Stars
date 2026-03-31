@@ -9,9 +9,6 @@ class TitleScene extends Phaser.Scene {
     };
 
     create = function () {
-        //var bg = this.add.sprite(0, 0, 'background');
-        //bg.setOrigin(0, 0);
-		
 		var centerX = this.sys.game.config.width / 2;
 		var centerY = this.sys.game.config.height / 2;
 	

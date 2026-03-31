@@ -3,8 +3,6 @@
 /*
 	STAR FACTS
 	----------------
-	Star facts that I found on Google:
-	
 	Average protostar has a mass between 10-50 solar masses and a core temp up to 1 million Kelvin.
 	Average main sequence stars have a mass between 1 and 100 solar masses and a core temp up to 15 million Kelvin.
 	Average red giant stars have a mass between .3 to 8 times its average mass and core temp up to around 100 million Kelvin.

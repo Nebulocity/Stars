@@ -1,0 +1,25 @@
+{
+  "name": "stars",
+  "version": "1.0.0",
+  "description": "I had a wild idea one night to muck around with simulating star birth and growth and gamify it...",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nebulocity/Stars.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Nebulocity/Stars/issues"
+  },
+  "homepage": "https://github.com/Nebulocity/Stars#readme",
+  "dependencies": {
+    "vite": "^8.0.3"
+  }
+}

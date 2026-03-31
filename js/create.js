@@ -1,7 +1,3 @@
-// import { createGasEmitter } from './gasvisuals.js';
-
-
-
 function gameCreate() {
 	const centerX = this.sys.game.config.width / 2;
 	const centerY = this.sys.game.config.height / 2;
@@ -13,7 +9,7 @@ function gameCreate() {
 		const layer = this.make.graphics({ x: 0, y: 0, add: false });
 		layer.generateTexture(`space_layer${i}`, 0, 0);
 		this[`space_layer${i}`] = this.add.tileSprite(0, 0, 1280, 720, `space_layer${i}`).setScale(1);
-		this[`space_layer${i}`].setOrigin(0, 0); // Optional: ensures the sprite is aligned to the top-left corner
+		this[`space_layer${i}`].setOrigin(0, 0); 
 		this[`space_layer${i}`].depth = -99 + i;
 	}
 
@@ -45,7 +41,7 @@ function gameCreate() {
 		wordWrap: { width: 400 }
 	}).setOrigin(0.5).setVisible(false).setDepth(11);
 
-	// Used to max out or clamp values so they're not indecipherable
+	// Used to max out or clamp values so they're not crazy
 	const MIN_VAL = 1;
 	const MAX_VAL = 1e3;
 
