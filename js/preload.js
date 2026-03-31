@@ -1,3 +1,5 @@
+const Phaser = window.Phaser; // Phaser is loaded via <script> in index.html
+
 function gamePreload() {
 
 
