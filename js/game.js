@@ -1,3 +1,5 @@
+const Phaser = window.Phaser; // Phaser is loaded via <script> in index.html
+
 import TitleScene from '/js/scene_title.js';
 import GameScene from '/js/scene_game.js';
 
