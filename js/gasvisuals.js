@@ -1,3 +1,5 @@
+const Phaser = window.Phaser; // Phaser is loaded via <script> in index.html
+
 export function createGasEmitter(scene, star) { 
 	const centerX = scene.sys.game.config.width / 2; 
 	const centerY = scene.sys.game.config.height / 2;
