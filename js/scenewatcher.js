@@ -1,4 +1,5 @@
-import Phaser from 'phaser';
+//import Phaser from 'phaser';
+const Phaser = window.Phaser; // Phaser is loaded via <script> in index.html
 
 const Pad = Phaser.Utils.String.Pad;
 const ICON_OTHER = ' ';
